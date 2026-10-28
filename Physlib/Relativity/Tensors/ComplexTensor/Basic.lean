@@ -142,8 +142,8 @@ def complexLorentzTensor : TensorSpecies ℂ complexLorentzTensor.Color SL(2, �
     | Color.downL => Fermion.DualLeftHandedWeyl.basis
     | Color.upR => Fermion.RightHandedWeyl.basis
     | Color.downR => Fermion.DualRightHandedWeyl.basis
-    | Color.up => Lorentz.complexContrBasisFin4
-    | Color.down => Lorentz.complexCoBasisFin4) where
+    | Color.up => Lorentz.ComplexVector.basisFin4
+    | Color.down => Lorentz.ComplexCoVector.basisFin4) where
 
   τ := fun c =>
     match c with
@@ -234,8 +234,8 @@ abbrev basis (c : Color) : Module.Basis (Fin (repDim c)) ℂ (modules c) :=
   | Color.downL => Fermion.DualLeftHandedWeyl.basis
   | Color.upR => Fermion.RightHandedWeyl.basis
   | Color.downR => Fermion.DualRightHandedWeyl.basis
-  | Color.up => Lorentz.complexContrBasisFin4
-  | Color.down => Lorentz.complexCoBasisFin4
+  | Color.up => Lorentz.ComplexVector.basisFin4
+  | Color.down => Lorentz.ComplexCoVector.basisFin4
 
 /-- The reps associated with each of the different types of complex Lorentz vector space. -/
 abbrev rep (c : Color) : Representation ℂ SL(2, ℂ) (modules c) :=
@@ -343,17 +343,18 @@ def complexLorentzConjTensor : ConjTensorSpecies ℂ Color SL(2, ℂ) modules
           (Fermion.DualLeftHandedWeyl.rep g (Fermion.DualLeftHandedWeyl.basis i)) j)
       rw [Fermion.DualLeftHandedWeyl.rep_apply_basis_repr,
         Fermion.DualRightHandedWeyl.rep_apply_basis_repr]
-    · change Lorentz.complexContrBasisFin4.repr (Lorentz.ComplexVector.SL2CRep g
-          (Lorentz.complexContrBasisFin4 i)) j = star (Lorentz.complexContrBasisFin4.repr
-          (Lorentz.ComplexVector.SL2CRep g (Lorentz.complexContrBasisFin4 i)) j)
-      rw [Lorentz.complexContrBasisFin4_eq_reindex, Module.Basis.repr_reindex_apply,
-        Module.Basis.reindex_apply, ← LinearMap.toMatrix_apply, Lorentz.complexContrBasis_ρ_apply,
+    · change Lorentz.ComplexVector.basisFin4.repr (Lorentz.ComplexVector.SL2CRep g
+          (Lorentz.ComplexVector.basisFin4 i)) j = star (Lorentz.ComplexVector.basisFin4.repr
+          (Lorentz.ComplexVector.SL2CRep g (Lorentz.ComplexVector.basisFin4 i)) j)
+      rw [Lorentz.ComplexVector.basisFin4_eq_reindex, Module.Basis.repr_reindex_apply,
+        Module.Basis.reindex_apply, ← LinearMap.toMatrix_apply, Lorentz.ComplexVector.basis_ρ_apply,
         LorentzGroup.star_toComplex_apply]
-    · change Lorentz.complexCoBasisFin4.repr (Lorentz.ComplexCoVector.SL2CRep g
-          (Lorentz.complexCoBasisFin4 i)) j = star (Lorentz.complexCoBasisFin4.repr
-          (Lorentz.ComplexCoVector.SL2CRep g (Lorentz.complexCoBasisFin4 i)) j)
-      rw [Lorentz.complexCoBasisFin4_eq_reindex, Module.Basis.repr_reindex_apply,
-        Module.Basis.reindex_apply, ← LinearMap.toMatrix_apply, Lorentz.complexCoBasis_ρ_apply,
+    · change Lorentz.ComplexCoVector.basisFin4.repr (Lorentz.ComplexCoVector.SL2CRep g
+          (Lorentz.ComplexCoVector.basisFin4 i)) j = star (Lorentz.ComplexCoVector.basisFin4.repr
+          (Lorentz.ComplexCoVector.SL2CRep g (Lorentz.ComplexCoVector.basisFin4 i)) j)
+      rw [Lorentz.ComplexCoVector.basisFin4_eq_reindex, Module.Basis.repr_reindex_apply,
+        Module.Basis.reindex_apply, ← LinearMap.toMatrix_apply,
+        Lorentz.ComplexCoVector.basis_ρ_apply,
         LorentzGroup.toComplex_inv, Matrix.transpose_apply, LorentzGroup.star_toComplex_apply]
   conj_contrComm d x₁ x₂ := by
     cases d <;>

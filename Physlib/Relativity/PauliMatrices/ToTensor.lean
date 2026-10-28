@@ -153,10 +153,10 @@ lemma toTensor_eq_asConsTensor :
   rw [PauliMatrix.asTensor_expand, toTensor_basis_expand]
   simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, map_sub,
     map_add, _root_.map_smul]
-  rw [show complexContrBasis (Sum.inl 0) = complexContrBasisFin4 0 by {simp}]
-  rw [show complexContrBasis (Sum.inr 0) = complexContrBasisFin4 1 by {simp}]
-  rw [show complexContrBasis (Sum.inr 1) = complexContrBasisFin4 2 by {simp}]
-  rw [show complexContrBasis (Sum.inr 2) = complexContrBasisFin4 3 by {simp}]
+  rw [show ComplexVector.basis (Sum.inl 0) = ComplexVector.basisFin4 0 by {simp}]
+  rw [show ComplexVector.basis (Sum.inr 0) = ComplexVector.basisFin4 1 by {simp}]
+  rw [show ComplexVector.basis (Sum.inr 1) = ComplexVector.basisFin4 2 by {simp}]
+  rw [show ComplexVector.basis (Sum.inr 2) = ComplexVector.basisFin4 3 by {simp}]
   simp only [fromTripleT_apply_basis]
   rfl
 

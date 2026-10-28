@@ -94,7 +94,7 @@ multisets. The basis is Mathlib's `Module.Basis.symmetricAlgebra`, reindexed by 
 
 /-- The monomial basis of the derivative algebra, in which `basis s` is the monomial `∂^s`. -/
 noncomputable def basis : Module.Basis (Multiset (Fin 1 ⊕ Fin 3)) ℂ SpaceTimeDerivAlgebraℂ :=
-  Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
+  Lorentz.ComplexCoVector.basis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
 
 @[inherit_doc basis]
 scoped notation "∂^[" s "]" => basis s
@@ -105,7 +105,7 @@ scoped notation "∂[" μ "]" => basis {μ}
 /-- The monomial `∂^s` is the polynomial monomial whose exponents are the multiplicities in
   `s`. -/
 lemma basis_apply (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    ∂^[s] = (SymmetricAlgebra.equivMvPolynomial Lorentz.complexCoBasis.dualBasis).symm
+    ∂^[s] = (SymmetricAlgebra.equivMvPolynomial Lorentz.ComplexCoVector.basis.dualBasis).symm
       (MvPolynomial.monomial (Multiset.toFinsupp s) 1) := by
   rw [basis, Module.Basis.reindex_apply, Equiv.symm_symm]
   rfl
@@ -118,7 +118,7 @@ lemma basis_zero : ∂^[0] = 1 := by
 
 /-- The monomial of a single direction `μ` is the derivative symbol `∂_μ`. -/
 lemma basis_singleton (μ : Fin 1 ⊕ Fin 3) :
-    ∂[μ] = SymmetricAlgebra.ι ℂ _ (Lorentz.complexCoBasis.dualBasis μ) := by
+    ∂[μ] = SymmetricAlgebra.ι ℂ _ (Lorentz.ComplexCoVector.basis.dualBasis μ) := by
   rw [basis_apply, Multiset.toFinsupp_singleton]
   exact SymmetricAlgebra.equivMvPolynomial_symm_X _ μ
 

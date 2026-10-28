@@ -141,46 +141,46 @@ lemma dualRightMetric_eq_fromPairT : εR' = fromPairT (Fermion.DualRightHandedWe
 
 /-!
 
-### complexCoBasis etc.
+### ComplexCoVector.basis etc.
 
 -/
 
 open Lorentz in
-lemma coMetric_eq_complexCoBasis : η' =
-    fromPairT (complexCoBasis (Sum.inl 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inl 0))
-    - fromPairT (complexCoBasis (Sum.inr 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 0))
-    - fromPairT (complexCoBasis (Sum.inr 1) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 1))
-    - fromPairT (complexCoBasis (Sum.inr 2) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 2)) := by
+lemma coMetric_eq_complexCoVector_basis : η' =
+    fromPairT (ComplexCoVector.basis (Sum.inl 0) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inl 0))
+    - fromPairT (ComplexCoVector.basis (Sum.inr 0) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 0))
+    - fromPairT (ComplexCoVector.basis (Sum.inr 1) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 1))
+    - fromPairT (ComplexCoVector.basis (Sum.inr 2) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 2)) := by
   rw [coMetric_eq_fromPairT, ComplexCoVector.metricVal_expand_tmul]
   simp
 
 open Lorentz in
-lemma coMetric_eq_complexCoBasisFin4 : η' =
-    fromPairT (complexCoBasisFin4 0 ⊗ₜ[ℂ] complexCoBasisFin4 0)
-    - fromPairT (complexCoBasisFin4 1 ⊗ₜ[ℂ] complexCoBasisFin4 1)
-    - fromPairT (complexCoBasisFin4 2 ⊗ₜ[ℂ] complexCoBasisFin4 2)
-    - fromPairT (complexCoBasisFin4 3 ⊗ₜ[ℂ] complexCoBasisFin4 3) := by
-  rw [coMetric_eq_complexCoBasis]
-  simp [complexCoBasisFin4]
+lemma coMetric_eq_complexCoVector_basisFin4 : η' =
+    fromPairT (ComplexCoVector.basisFin4 0 ⊗ₜ[ℂ] ComplexCoVector.basisFin4 0)
+    - fromPairT (ComplexCoVector.basisFin4 1 ⊗ₜ[ℂ] ComplexCoVector.basisFin4 1)
+    - fromPairT (ComplexCoVector.basisFin4 2 ⊗ₜ[ℂ] ComplexCoVector.basisFin4 2)
+    - fromPairT (ComplexCoVector.basisFin4 3 ⊗ₜ[ℂ] ComplexCoVector.basisFin4 3) := by
+  rw [coMetric_eq_complexCoVector_basis]
+  simp [ComplexCoVector.basisFin4]
   rfl
 
 open Lorentz in
-lemma contrMetric_eq_complexContrBasis : η =
-    fromPairT (complexContrBasis (Sum.inl 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inl 0))
-    - fromPairT (complexContrBasis (Sum.inr 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 0))
-    - fromPairT (complexContrBasis (Sum.inr 1) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 1))
-    - fromPairT (complexContrBasis (Sum.inr 2) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 2)) := by
+lemma contrMetric_eq_complexVector_basis : η =
+    fromPairT (ComplexVector.basis (Sum.inl 0) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inl 0))
+    - fromPairT (ComplexVector.basis (Sum.inr 0) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 0))
+    - fromPairT (ComplexVector.basis (Sum.inr 1) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 1))
+    - fromPairT (ComplexVector.basis (Sum.inr 2) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 2)) := by
   rw [contrMetric_eq_fromPairT, ComplexVector.metricVal_expand_tmul]
   simp
 
 open Lorentz in
-lemma contrMetric_eq_complexContrBasisFin4 : η =
-    fromPairT (complexContrBasisFin4 0 ⊗ₜ[ℂ] complexContrBasisFin4 0)
-    - fromPairT (complexContrBasisFin4 1 ⊗ₜ[ℂ] complexContrBasisFin4 1)
-    - fromPairT (complexContrBasisFin4 2 ⊗ₜ[ℂ] complexContrBasisFin4 2)
-    - fromPairT (complexContrBasisFin4 3 ⊗ₜ[ℂ] complexContrBasisFin4 3) := by
-  rw [contrMetric_eq_complexContrBasis]
-  simp [complexContrBasisFin4]
+lemma contrMetric_eq_complexVector_basisFin4 : η =
+    fromPairT (ComplexVector.basisFin4 0 ⊗ₜ[ℂ] ComplexVector.basisFin4 0)
+    - fromPairT (ComplexVector.basisFin4 1 ⊗ₜ[ℂ] ComplexVector.basisFin4 1)
+    - fromPairT (ComplexVector.basisFin4 2 ⊗ₜ[ℂ] ComplexVector.basisFin4 2)
+    - fromPairT (ComplexVector.basisFin4 3 ⊗ₜ[ℂ] ComplexVector.basisFin4 3) := by
+  rw [contrMetric_eq_complexVector_basis]
+  simp [ComplexVector.basisFin4]
   rfl
 
 open Fermion in
@@ -227,7 +227,7 @@ lemma coMetric_eq_basis : η' =
       (fun | 0 => (2 : Fin 4) | 1 => (2 : Fin 4)))
     - (Tensor.basis (S := complexLorentzTensor) ![Color.down, Color.down]
       (fun | 0 => (3 : Fin 4) | 1 => (3 : Fin 4))) := by
-  rw [coMetric_eq_complexCoBasisFin4]
+  rw [coMetric_eq_complexCoVector_basisFin4]
   conv_lhs =>
     enter [2]
     change fromPairT ((complexLorentzTensor.basis .down _) ⊗ₜ[ℂ]
@@ -260,7 +260,7 @@ lemma contrMetric_eq_basis : η =
       (fun | 0 => (2 : Fin 4) | 1 => (2 : Fin 4)))
     - (Tensor.basis (S := complexLorentzTensor) ![Color.up, Color.up]
       (fun | 0 => (3 : Fin 4) | 1 => (3 : Fin 4))) := by
-  rw [contrMetric_eq_complexContrBasisFin4]
+  rw [contrMetric_eq_complexVector_basisFin4]
   conv_lhs =>
     enter [2]
     change fromPairT ((complexLorentzTensor.basis .up _) ⊗ₜ[ℂ]

@@ -30,10 +30,10 @@ def ComplexCoVector.unitVal : ComplexVector ⊗[ℂ] ComplexCoVector :=
 
 /-- Expansion of `ComplexCoVector.unitVal` into basis. -/
 lemma ComplexCoVector.unitVal_expand_tmul : ComplexCoVector.unitVal =
-    complexContrBasis (Sum.inl 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inl 0)
-    + complexContrBasis (Sum.inr 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 0)
-    + complexContrBasis (Sum.inr 1) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 1)
-    + complexContrBasis (Sum.inr 2) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 2) := by
+    ComplexVector.basis (Sum.inl 0) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inl 0)
+    + ComplexVector.basis (Sum.inr 0) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 0)
+    + ComplexVector.basis (Sum.inr 1) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 1)
+    + ComplexVector.basis (Sum.inr 2) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 2) := by
   simp only [ComplexCoVector.unitVal, Fin.isValue]
   rw [contrCoToMatrix_symm_expand_tmul]
   simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
@@ -43,7 +43,7 @@ lemma ComplexCoVector.unitVal_expand_tmul : ComplexCoVector.unitVal =
   rfl
 
 lemma ComplexCoVector.unitVal_eq_sum_tmul : ComplexCoVector.unitVal =
-    ∑ i, complexContrBasis i ⊗ₜ[ℂ] complexCoBasis i := by
+    ∑ i, ComplexVector.basis i ⊗ₜ[ℂ] ComplexCoVector.basis i := by
   simp [ComplexCoVector.unitVal_expand_tmul, Fin.isValue, Fin.sum_univ_three]
   module
 
@@ -82,10 +82,10 @@ def ComplexVector.unitVal : ComplexCoVector ⊗[ℂ] ComplexVector :=
 
 /-- Expansion of `ComplexVector.unitVal` into basis. -/
 lemma ComplexVector.unitVal_expand_tmul : ComplexVector.unitVal =
-    complexCoBasis (Sum.inl 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inl 0)
-    + complexCoBasis (Sum.inr 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 0)
-    + complexCoBasis (Sum.inr 1) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 1)
-    + complexCoBasis (Sum.inr 2) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 2) := by
+    ComplexCoVector.basis (Sum.inl 0) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inl 0)
+    + ComplexCoVector.basis (Sum.inr 0) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 0)
+    + ComplexCoVector.basis (Sum.inr 1) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 1)
+    + ComplexCoVector.basis (Sum.inr 2) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 2) := by
   simp only [ComplexVector.unitVal, Fin.isValue]
   rw [coContrToMatrix_symm_expand_tmul]
   simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
@@ -95,7 +95,7 @@ lemma ComplexVector.unitVal_expand_tmul : ComplexVector.unitVal =
   rfl
 
 lemma ComplexVector.unitVal_eq_sum_tmul : ComplexVector.unitVal =
-    ∑ i, complexCoBasis i ⊗ₜ[ℂ] complexContrBasis i := by
+    ∑ i, ComplexCoVector.basis i ⊗ₜ[ℂ] ComplexVector.basis i := by
   simp [ComplexVector.unitVal_expand_tmul, Fin.isValue, Fin.sum_univ_three]
   module
 
@@ -142,7 +142,8 @@ lemma ComplexCoVector.contr_unit (x : ComplexCoVector) :
     ComplexCoVector.contr.toLinearMap.rTensor _ <|
     (TensorProduct.assoc ℂ _ _ _).symm <|
     x ⊗ₜ[ℂ] (ComplexCoVector.unit (1 : ℂ))) = x := by
-  obtain ⟨c, hc⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).mp (Basis.mem_span complexCoBasis x)
+  obtain ⟨c, hc⟩ :=
+    (Submodule.mem_span_range_iff_exists_fun ℂ).mp (Basis.mem_span ComplexCoVector.basis x)
   subst hc
   simp [- Fintype.sum_sum_type, map_sum, tmul_sum, smul_tmul, ComplexCoVector.contr_basis',
     ComplexCoVector.unit_apply_one, ComplexCoVector.unitVal_eq_sum_tmul, sum_tmul]
@@ -154,7 +155,7 @@ lemma ComplexVector.contr_unit (x : ComplexVector) :
     (TensorProduct.assoc ℂ _ _ _).symm <|
     x ⊗ₜ[ℂ] (ComplexVector.unit (1 : ℂ))) = x := by
   obtain ⟨c, hc⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).mp
-    (Basis.mem_span complexContrBasis x)
+    (Basis.mem_span ComplexVector.basis x)
   subst hc
   simp [- Fintype.sum_sum_type, map_sum, tmul_sum, smul_tmul, ComplexVector.contr_basis',
     ComplexVector.unit_apply_one, ComplexVector.unitVal_eq_sum_tmul, sum_tmul]

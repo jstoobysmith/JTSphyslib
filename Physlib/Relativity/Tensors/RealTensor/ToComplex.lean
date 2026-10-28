@@ -238,9 +238,9 @@ noncomputable def toComplexVector (c : realLorentzTensor.Color) :
     (colorToComplex c) where
   toFun v := match c with
     | Color.up => ∑ i, ((Lorentz.contrBasis 3).repr v i) •
-      Lorentz.complexContrBasisFin4 (finSumFinEquiv i)
+      Lorentz.ComplexVector.basisFin4 (finSumFinEquiv i)
     | Color.down => ∑ i, ((Lorentz.coBasis 3).repr v i) •
-      Lorentz.complexCoBasisFin4 (finSumFinEquiv i)
+      Lorentz.ComplexCoVector.basisFin4 (finSumFinEquiv i)
   map_add' v1 v2 := by
     match c with
     | Color.up =>
@@ -272,22 +272,22 @@ noncomputable def toComplexVector (c : realLorentzTensor.Color) :
 
 lemma toComplexVector_up_eq_inclCongrRealLorentz (v : Lorentz.ContrMod 3) :
     toComplexVector Color.up v = Lorentz.inclCongrRealLorentz v := by
-  trans ∑ i, v.toFin1dℝ i • Lorentz.complexContrBasis i
+  trans ∑ i, v.toFin1dℝ i • Lorentz.ComplexVector.basis i
   · simp [toComplexVector, Lorentz.contrBasis_repr_apply,
-      Lorentz.complexContrBasisFin4, Lorentz.ContrMod.toFin1dℝ_eq_val]
+      Lorentz.ComplexVector.basisFin4, Lorentz.ContrMod.toFin1dℝ_eq_val]
   · conv_rhs => rw [Lorentz.ContrMod.stdBasis_decomp v]
     simp only [map_sum, LinearMap.map_smulₛₗ, Complex.ofRealHom_eq_coe, Complex.coe_smul,
-      Lorentz.complexContrBasis_of_real]
+      Lorentz.ComplexVector.basis_of_real]
     rfl
 
 lemma toComplexVector_down_eq_inclCoRealLorentz (v : Lorentz.CoMod 3) :
     toComplexVector Color.down v = Lorentz.inclCoRealLorentz v := by
-  trans ∑ i, v.toFin1dℝ i • Lorentz.complexCoBasis i
-  · simp [toComplexVector, Lorentz.coBasis_repr_apply, Lorentz.complexCoBasisFin4]
+  trans ∑ i, v.toFin1dℝ i • Lorentz.ComplexCoVector.basis i
+  · simp [toComplexVector, Lorentz.coBasis_repr_apply, Lorentz.ComplexCoVector.basisFin4]
     rfl
   · conv_rhs => rw [Lorentz.CoMod.stdBasis_decomp v]
     simp only [map_sum, LinearMap.map_smulₛₗ, Complex.ofRealHom_eq_coe, Complex.coe_smul,
-      Lorentz.complexCoBasis_of_real]
+      Lorentz.ComplexCoVector.basis_of_real]
     rfl
 
 /-- The function which turns a real pure tensor into a complex one. -/
@@ -312,8 +312,8 @@ lemma toComplexPure_component {c : Fin n → Color} (p : Pure realLorentzTensor 
     | Color.downL => Fermion.DualLeftHandedWeyl.basis
     | Color.upR => Fermion.RightHandedWeyl.basis
     | Color.downR => Fermion.DualRightHandedWeyl.basis
-    | complexLorentzTensor.Color.up => Lorentz.complexContrBasisFin4
-    | complexLorentzTensor.Color.down => Lorentz.complexCoBasisFin4
+    | complexLorentzTensor.Color.up => Lorentz.ComplexVector.basisFin4
+    | complexLorentzTensor.Color.down => Lorentz.ComplexCoVector.basisFin4
   let b' (c : Color) : Basis (Fin 1 ⊕ Fin 3) ℝ (realLorentzTensor.modules 3 c) :=
     (match c with
       | Color.up => Lorentz.contrBasis
@@ -330,30 +330,30 @@ lemma toComplexPure_component {c : Fin n → Color} (p : Pure realLorentzTensor 
   generalize c x = c at *
   fin_cases c
   · simp only [colorToComplex, toComplexVector, Nat.reduceAdd, Fin.cast_eq_self, P, b, b']
-    trans (∑ x, (Lorentz.complexContrBasisFin4.repr ((Lorentz.contrBasis.repr px) x •
-        Lorentz.complexContrBasisFin4 (finSumFinEquiv x))))
+    trans (∑ x, (Lorentz.ComplexVector.basisFin4.repr ((Lorentz.contrBasis.repr px) x •
+        Lorentz.ComplexVector.basisFin4 (finSumFinEquiv x))))
       (finSumFinEquiv φx)
     · simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
       Finset.sum_singleton, Nat.reduceAdd, Finsupp.coe_add, Finsupp.coe_finsetSum, Pi.add_apply,
       Finset.sum_apply]
       rfl
-    simp [- Fintype.sum_sum_type, Lorentz.complexContrBasisFin4]
-    trans ∑ x, (((Lorentz.contrBasis.repr px) x • Lorentz.complexContrBasis.repr
-      (Lorentz.complexContrBasis x) φx))
+    simp [- Fintype.sum_sum_type, Lorentz.ComplexVector.basisFin4]
+    trans ∑ x, (((Lorentz.contrBasis.repr px) x • Lorentz.ComplexVector.basis.repr
+      (Lorentz.ComplexVector.basis x) φx))
     · simp [Basis.repr_self, Complex.real_smul]
       rfl
     simp [- Fintype.sum_sum_type, Finsupp.single_apply]
   · simp only [colorToComplex, toComplexVector, Nat.reduceAdd, Fin.cast_eq_self, P, b, b']
-    trans (∑ x, (Lorentz.complexCoBasisFin4.repr ((Lorentz.coBasis.repr px) x •
-      Lorentz.complexCoBasisFin4 (finSumFinEquiv x))))
+    trans (∑ x, (Lorentz.ComplexCoVector.basisFin4.repr ((Lorentz.coBasis.repr px) x •
+      Lorentz.ComplexCoVector.basisFin4 (finSumFinEquiv x))))
       (finSumFinEquiv φx)
     · simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
       Finset.sum_singleton, Nat.reduceAdd, Finsupp.coe_add, Finsupp.coe_finsetSum, Pi.add_apply,
       Finset.sum_apply]
       rfl
-    simp [- Fintype.sum_sum_type, Lorentz.complexCoBasisFin4]
+    simp [- Fintype.sum_sum_type, Lorentz.ComplexCoVector.basisFin4]
     trans ∑ x, (((Lorentz.coBasis.repr px) x •
-      Lorentz.complexCoBasis.repr (Lorentz.complexCoBasis x) φx))
+      Lorentz.ComplexCoVector.basis.repr (Lorentz.ComplexCoVector.basis x) φx))
     · simp [Basis.repr_self, Complex.real_smul]
       rfl
     simp [- Fintype.sum_sum_type, Finsupp.single_apply]

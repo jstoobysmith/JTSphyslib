@@ -21,7 +21,7 @@ basis vector `e^μ` goes to the combination of dual basis vectors given by the c
 complexified Lorentz matrix. This is the complex analogue of
 `Lorentz.CoVector.sl2Rep_dual_dualBasis`, and is obtained from
 `Representation.dual_apply_dualBasis` with the transposed inverse matrix read off from
-`Lorentz.complexCoBasis_ρ_apply`.
+`Lorentz.ComplexCoVector.basis_ρ_apply`.
 
 ## ii. Key results
 
@@ -59,23 +59,23 @@ namespace Lorentz
   complex analogue of `Lorentz.CoVector.sl2Rep_dual_dualBasis`. -/
 lemma ComplexCoVector.SL2CRep_dual_dualBasis (Λ : SL(2,ℂ))
     (μ : Fin 1 ⊕ Fin 3) :
-    Lorentz.ComplexCoVector.SL2CRep.dual Λ (Lorentz.complexCoBasis.dualBasis μ) =
+    Lorentz.ComplexCoVector.SL2CRep.dual Λ (Lorentz.ComplexCoVector.basis.dualBasis μ) =
       ∑ j, (((Lorentz.SL2C.toLorentzGroup Λ).1 j μ : ℝ) : ℂ) •
-        Lorentz.complexCoBasis.dualBasis j := by
+        Lorentz.ComplexCoVector.basis.dualBasis j := by
   refine Representation.dual_apply_dualBasis _ _ _ _
     (Matrix.of fun l j => (((Lorentz.SL2C.toLorentzGroup Λ).1 j l : ℝ) : ℂ))
     (fun j => ?_)
-  have hexp : Lorentz.ComplexCoVector.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j) =
-      ∑ l, (LinearMap.toMatrix Lorentz.complexCoBasis Lorentz.complexCoBasis
-        (Lorentz.ComplexCoVector.SL2CRep Λ⁻¹)) l j • Lorentz.complexCoBasis l := by
-    conv_lhs => rw [← Lorentz.complexCoBasis.sum_repr
-      (Lorentz.ComplexCoVector.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j))]
+  have hexp : Lorentz.ComplexCoVector.SL2CRep Λ⁻¹ (Lorentz.ComplexCoVector.basis j) =
+      ∑ l, (LinearMap.toMatrix Lorentz.ComplexCoVector.basis Lorentz.ComplexCoVector.basis
+        (Lorentz.ComplexCoVector.SL2CRep Λ⁻¹)) l j • Lorentz.ComplexCoVector.basis l := by
+    conv_lhs => rw [← Lorentz.ComplexCoVector.basis.sum_repr
+      (Lorentz.ComplexCoVector.SL2CRep Λ⁻¹ (Lorentz.ComplexCoVector.basis j))]
     refine Finset.sum_congr rfl fun l _ => ?_
     rw [LinearMap.toMatrix_apply]
   rw [hexp]
   refine Finset.sum_congr rfl fun l _ => ?_
   congr 1
-  rw [Lorentz.complexCoBasis_ρ_apply, map_inv, Matrix.transpose_apply,
+  rw [Lorentz.ComplexCoVector.basis_ρ_apply, map_inv, Matrix.transpose_apply,
     ← LorentzGroup.toComplex_inv, Matrix.inv_inv_of_invertible]
   rfl
 

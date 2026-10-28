@@ -26,7 +26,7 @@ namespace Lorentz
 /-- Equivalence of `complexContr ⊗ complexContr` to `4 x 4` complex matrices. -/
 def contrContrToMatrix : (ComplexVector ⊗[ℂ] ComplexVector) ≃ₗ[ℂ]
     Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ :=
-  (Basis.tensorProduct complexContrBasis complexContrBasis).repr ≪≫ₗ
+  (Basis.tensorProduct ComplexVector.basis ComplexVector.basis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)) ≪≫ₗ
   LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)
 
@@ -34,69 +34,72 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Expanding `contrContrToMatrix` in terms of the standard basis. -/
 lemma contrContrToMatrix_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ) :
     contrContrToMatrix.symm M =
-    ∑ i, ∑ j, M i j • (complexContrBasis i ⊗ₜ[ℂ] complexContrBasis j) := by
+    ∑ i, ∑ j, M i j • (ComplexVector.basis i ⊗ₜ[ℂ] ComplexVector.basis j) := by
   simp only [contrContrToMatrix, LinearEquiv.trans_symm, LinearEquiv.trans_apply,
     Basis.repr_symm_apply]
   rw [Finsupp.linearCombination_apply_of_mem_supported ℂ (s := Finset.univ)]
   · rw [Fintype.sum_prod_type]
     refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
-    exact congrArg _ (Basis.tensorProduct_apply complexContrBasis complexContrBasis i j)
+    exact congrArg _ (Basis.tensorProduct_apply ComplexVector.basis ComplexVector.basis i j)
   · simp
 
 /-- Equivalence of `complexCo ⊗ complexCo` to `4 x 4` complex matrices. -/
 def coCoToMatrix : (ComplexCoVector ⊗[ℂ] ComplexCoVector) ≃ₗ[ℂ]
     Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ :=
-  (Basis.tensorProduct complexCoBasis complexCoBasis).repr ≪≫ₗ
+  (Basis.tensorProduct ComplexCoVector.basis ComplexCoVector.basis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)) ≪≫ₗ
   LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Expanding `coCoToMatrix` in terms of the standard basis. -/
 lemma coCoToMatrix_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ) :
-    coCoToMatrix.symm M = ∑ i, ∑ j, M i j • (complexCoBasis i ⊗ₜ[ℂ] complexCoBasis j) := by
+    coCoToMatrix.symm M =
+      ∑ i, ∑ j, M i j • (ComplexCoVector.basis i ⊗ₜ[ℂ] ComplexCoVector.basis j) := by
   simp only [coCoToMatrix, LinearEquiv.trans_symm, LinearEquiv.trans_apply, Basis.repr_symm_apply]
   rw [Finsupp.linearCombination_apply_of_mem_supported ℂ (s := Finset.univ)]
   · rw [Fintype.sum_prod_type]
     refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
-    exact congrArg _ (Basis.tensorProduct_apply complexCoBasis complexCoBasis i j)
+    exact congrArg _ (Basis.tensorProduct_apply ComplexCoVector.basis ComplexCoVector.basis i j)
   · simp
 
 /-- Equivalence of `complexContr ⊗ complexCo` to `4 x 4` complex matrices. -/
 def contrCoToMatrix : (ComplexVector ⊗[ℂ] ComplexCoVector) ≃ₗ[ℂ]
     Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ :=
-  (Basis.tensorProduct complexContrBasis complexCoBasis).repr ≪≫ₗ
+  (Basis.tensorProduct ComplexVector.basis ComplexCoVector.basis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)) ≪≫ₗ
   LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `contrCoToMatrix` in terms of the standard basis. -/
 lemma contrCoToMatrix_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ) :
-    contrCoToMatrix.symm M = ∑ i, ∑ j, M i j • (complexContrBasis i ⊗ₜ[ℂ] complexCoBasis j) := by
+    contrCoToMatrix.symm M =
+      ∑ i, ∑ j, M i j • (ComplexVector.basis i ⊗ₜ[ℂ] ComplexCoVector.basis j) := by
   simp only [contrCoToMatrix, LinearEquiv.trans_symm, LinearEquiv.trans_apply,
     Basis.repr_symm_apply]
   rw [Finsupp.linearCombination_apply_of_mem_supported ℂ (s := Finset.univ)]
   · rw [Fintype.sum_prod_type]
     refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
-    exact congrArg _ (Basis.tensorProduct_apply complexContrBasis complexCoBasis i j)
+    exact congrArg _ (Basis.tensorProduct_apply ComplexVector.basis ComplexCoVector.basis i j)
   · simp
 
 /-- Equivalence of `complexCo ⊗ complexContr` to `4 x 4` complex matrices. -/
 def coContrToMatrix : (ComplexCoVector ⊗[ℂ] ComplexVector) ≃ₗ[ℂ]
     Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ :=
-  (Basis.tensorProduct complexCoBasis complexContrBasis).repr ≪≫ₗ
+  (Basis.tensorProduct ComplexCoVector.basis ComplexVector.basis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)) ≪≫ₗ
   LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `coContrToMatrix` in terms of the standard basis. -/
 lemma coContrToMatrix_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ) :
-    coContrToMatrix.symm M = ∑ i, ∑ j, M i j • (complexCoBasis i ⊗ₜ[ℂ] complexContrBasis j) := by
+    coContrToMatrix.symm M =
+      ∑ i, ∑ j, M i j • (ComplexCoVector.basis i ⊗ₜ[ℂ] ComplexVector.basis j) := by
   simp only [coContrToMatrix, LinearEquiv.trans_symm, LinearEquiv.trans_apply,
     Basis.repr_symm_apply]
   rw [Finsupp.linearCombination_apply_of_mem_supported ℂ (s := Finset.univ)]
   · rw [Fintype.sum_prod_type]
     refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
-    exact congrArg _ (Basis.tensorProduct_apply complexCoBasis complexContrBasis i j)
+    exact congrArg _ (Basis.tensorProduct_apply ComplexCoVector.basis ComplexVector.basis i j)
   · simp
 
 /-!
@@ -113,20 +116,20 @@ lemma contrContrToMatrix_ρ (v : (ComplexVector ⊗[ℂ] ComplexVector)) (M : SL
   nth_rewrite 1 [contrContrToMatrix]
   simp only [LinearEquiv.trans_apply]
   trans (LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)) ((LinearMap.toMatrix
-      (complexContrBasis.tensorProduct complexContrBasis)
-      (complexContrBasis.tensorProduct complexContrBasis)
+      (ComplexVector.basis.tensorProduct ComplexVector.basis)
+      (ComplexVector.basis.tensorProduct ComplexVector.basis)
       (TensorProduct.map (ComplexVector.SL2CRep M) (ComplexVector.SL2CRep M)))
       *ᵥ ((Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)))
-      ((complexContrBasis.tensorProduct complexContrBasis).repr v)))
+      ((ComplexVector.basis.tensorProduct ComplexVector.basis).repr v)))
   · apply congrArg
-    exact (LinearMap.toMatrix_mulVec_repr (complexContrBasis.tensorProduct complexContrBasis)
-      (complexContrBasis.tensorProduct complexContrBasis)
+    exact (LinearMap.toMatrix_mulVec_repr (ComplexVector.basis.tensorProduct ComplexVector.basis)
+      (ComplexVector.basis.tensorProduct ComplexVector.basis)
       (TensorProduct.map (ComplexVector.SL2CRep M) (ComplexVector.SL2CRep M)) v).symm
   rw [TensorProduct.toMatrix_map]
   funext i j
   change ∑ k, ((kroneckerMap (fun x1 x2 => x1 * x2)
-        ((LinearMap.toMatrix complexContrBasis complexContrBasis) (ComplexVector.SL2CRep M))
-        ((LinearMap.toMatrix complexContrBasis complexContrBasis)
+        ((LinearMap.toMatrix ComplexVector.basis ComplexVector.basis) (ComplexVector.SL2CRep M))
+        ((LinearMap.toMatrix ComplexVector.basis ComplexVector.basis)
           (ComplexVector.SL2CRep M)) (i, j) k)
         * contrContrToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
@@ -144,7 +147,7 @@ lemma contrContrToMatrix_ρ (v : (ComplexVector ⊗[ℂ] ComplexVector)) (M : SL
   funext x
   congr
   funext x1
-  simp only [complexContrBasis_ρ_apply]
+  simp only [ComplexVector.basis_ρ_apply]
   ring
 
 set_option backward.isDefEq.respectTransparency false in
@@ -155,20 +158,23 @@ lemma coCoToMatrix_ρ (v : (ComplexCoVector ⊗[ℂ] ComplexCoVector)) (M : SL(2
   nth_rewrite 1 [coCoToMatrix]
   simp only [LinearEquiv.trans_apply]
   trans (LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)) ((LinearMap.toMatrix
-      (complexCoBasis.tensorProduct complexCoBasis)
-      (complexCoBasis.tensorProduct complexCoBasis)
+      (ComplexCoVector.basis.tensorProduct ComplexCoVector.basis)
+      (ComplexCoVector.basis.tensorProduct ComplexCoVector.basis)
       (TensorProduct.map (ComplexCoVector.SL2CRep M) (ComplexCoVector.SL2CRep M))
       *ᵥ ((Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)))
-      ((complexCoBasis.tensorProduct complexCoBasis).repr v))))
+      ((ComplexCoVector.basis.tensorProduct ComplexCoVector.basis).repr v))))
   · apply congrArg
-    exact (LinearMap.toMatrix_mulVec_repr (complexCoBasis.tensorProduct complexCoBasis)
-      (complexCoBasis.tensorProduct complexCoBasis)
+    exact (LinearMap.toMatrix_mulVec_repr
+      (ComplexCoVector.basis.tensorProduct ComplexCoVector.basis)
+      (ComplexCoVector.basis.tensorProduct ComplexCoVector.basis)
       (TensorProduct.map (ComplexCoVector.SL2CRep M) (ComplexCoVector.SL2CRep M)) v).symm
   rw [TensorProduct.toMatrix_map]
   funext i j
   change ∑ k, ((kroneckerMap (fun x1 x2 => x1 * x2)
-        ((LinearMap.toMatrix complexCoBasis complexCoBasis) (ComplexCoVector.SL2CRep M))
-        ((LinearMap.toMatrix complexCoBasis complexCoBasis) (ComplexCoVector.SL2CRep M)) (i, j) k)
+        ((LinearMap.toMatrix ComplexCoVector.basis ComplexCoVector.basis)
+          (ComplexCoVector.SL2CRep M))
+        ((LinearMap.toMatrix ComplexCoVector.basis ComplexCoVector.basis)
+          (ComplexCoVector.SL2CRep M)) (i, j) k)
         * coCoToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
   simp_rw [kroneckerMap_apply, Matrix.mul_apply, Matrix.transpose_apply]
@@ -185,7 +191,7 @@ lemma coCoToMatrix_ρ (v : (ComplexCoVector ⊗[ℂ] ComplexCoVector)) (M : SL(2
   funext x
   congr
   funext x1
-  simp only [complexCoBasis_ρ_apply, transpose_apply]
+  simp only [ComplexCoVector.basis_ρ_apply, transpose_apply]
   ring
 
 set_option backward.isDefEq.respectTransparency false in
@@ -196,20 +202,21 @@ lemma contrCoToMatrix_ρ (v : (ComplexVector ⊗[ℂ] ComplexCoVector)) (M : SL(
   nth_rewrite 1 [contrCoToMatrix]
   simp only [LinearEquiv.trans_apply]
   trans (LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)) ((LinearMap.toMatrix
-      (complexContrBasis.tensorProduct complexCoBasis)
-      (complexContrBasis.tensorProduct complexCoBasis)
+      (ComplexVector.basis.tensorProduct ComplexCoVector.basis)
+      (ComplexVector.basis.tensorProduct ComplexCoVector.basis)
       (TensorProduct.map (ComplexVector.SL2CRep M) (ComplexCoVector.SL2CRep M))
       *ᵥ ((Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)))
-      ((complexContrBasis.tensorProduct complexCoBasis).repr v))))
+      ((ComplexVector.basis.tensorProduct ComplexCoVector.basis).repr v))))
   · apply congrArg
-    exact (LinearMap.toMatrix_mulVec_repr (complexContrBasis.tensorProduct complexCoBasis)
-      (complexContrBasis.tensorProduct complexCoBasis)
+    exact (LinearMap.toMatrix_mulVec_repr (ComplexVector.basis.tensorProduct ComplexCoVector.basis)
+      (ComplexVector.basis.tensorProduct ComplexCoVector.basis)
       (TensorProduct.map (ComplexVector.SL2CRep M) (ComplexCoVector.SL2CRep M)) v).symm
   rw [TensorProduct.toMatrix_map]
   funext i j
   change ∑ k, ((kroneckerMap (fun x1 x2 => x1 * x2)
-        ((LinearMap.toMatrix complexContrBasis complexContrBasis) (ComplexVector.SL2CRep M))
-        ((LinearMap.toMatrix complexCoBasis complexCoBasis) (ComplexCoVector.SL2CRep M)) (i, j) k)
+        ((LinearMap.toMatrix ComplexVector.basis ComplexVector.basis) (ComplexVector.SL2CRep M))
+        ((LinearMap.toMatrix ComplexCoVector.basis ComplexCoVector.basis)
+          (ComplexCoVector.SL2CRep M)) (i, j) k)
         * contrCoToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
   simp_rw [kroneckerMap_apply, Matrix.mul_apply]
@@ -226,7 +233,7 @@ lemma contrCoToMatrix_ρ (v : (ComplexVector ⊗[ℂ] ComplexCoVector)) (M : SL(
   funext x
   congr
   funext x1
-  simp only [complexContrBasis_ρ_apply, complexCoBasis_ρ_apply, transpose_apply]
+  simp only [ComplexVector.basis_ρ_apply, ComplexCoVector.basis_ρ_apply, transpose_apply]
   ring
 
 set_option backward.isDefEq.respectTransparency false in
@@ -237,20 +244,21 @@ lemma coContrToMatrix_ρ (v : (ComplexCoVector ⊗[ℂ] ComplexVector)) (M : SL(
   nth_rewrite 1 [coContrToMatrix]
   simp only [LinearEquiv.trans_apply]
   trans (LinearEquiv.curry ℂ ℂ (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3)) ((LinearMap.toMatrix
-      (complexCoBasis.tensorProduct complexContrBasis)
-      (complexCoBasis.tensorProduct complexContrBasis)
+      (ComplexCoVector.basis.tensorProduct ComplexVector.basis)
+      (ComplexCoVector.basis.tensorProduct ComplexVector.basis)
       (TensorProduct.map (ComplexCoVector.SL2CRep M) (ComplexVector.SL2CRep M))
       *ᵥ ((Finsupp.linearEquivFunOnFinite ℂ ℂ ((Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3)))
-      ((complexCoBasis.tensorProduct complexContrBasis).repr v))))
+      ((ComplexCoVector.basis.tensorProduct ComplexVector.basis).repr v))))
   · apply congrArg
-    exact (LinearMap.toMatrix_mulVec_repr (complexCoBasis.tensorProduct complexContrBasis)
-      (complexCoBasis.tensorProduct complexContrBasis)
+    exact (LinearMap.toMatrix_mulVec_repr (ComplexCoVector.basis.tensorProduct ComplexVector.basis)
+      (ComplexCoVector.basis.tensorProduct ComplexVector.basis)
       (TensorProduct.map (ComplexCoVector.SL2CRep M) (ComplexVector.SL2CRep M)) v).symm
   rw [TensorProduct.toMatrix_map]
   funext i j
   change ∑ k, ((kroneckerMap (fun x1 x2 => x1 * x2)
-        ((LinearMap.toMatrix complexCoBasis complexCoBasis) (ComplexCoVector.SL2CRep M))
-        ((LinearMap.toMatrix complexContrBasis complexContrBasis)
+        ((LinearMap.toMatrix ComplexCoVector.basis ComplexCoVector.basis)
+          (ComplexCoVector.SL2CRep M))
+        ((LinearMap.toMatrix ComplexVector.basis ComplexVector.basis)
           (ComplexVector.SL2CRep M)) (i, j) k)
         * coContrToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
@@ -268,7 +276,7 @@ lemma coContrToMatrix_ρ (v : (ComplexCoVector ⊗[ℂ] ComplexVector)) (M : SL(
   funext x
   congr
   funext x1
-  simp only [complexCoBasis_ρ_apply, complexContrBasis_ρ_apply, transpose_apply]
+  simp only [ComplexCoVector.basis_ρ_apply, ComplexVector.basis_ρ_apply, transpose_apply]
   ring
 
 /-!

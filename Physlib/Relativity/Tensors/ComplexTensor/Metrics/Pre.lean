@@ -29,10 +29,10 @@ def ComplexVector.metricVal : (ComplexVector ⊗[ℂ] ComplexVector) :=
 
 /-- The expansion of `ComplexVector.metricVal` into basis vectors. -/
 lemma ComplexVector.metricVal_expand_tmul : ComplexVector.metricVal =
-    complexContrBasis (Sum.inl 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inl 0)
-    - complexContrBasis (Sum.inr 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 0)
-    - complexContrBasis (Sum.inr 1) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 1)
-    - complexContrBasis (Sum.inr 2) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 2) := by
+    ComplexVector.basis (Sum.inl 0) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inl 0)
+    - ComplexVector.basis (Sum.inr 0) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 0)
+    - ComplexVector.basis (Sum.inr 1) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 1)
+    - ComplexVector.basis (Sum.inr 2) ⊗ₜ[ℂ] ComplexVector.basis (Sum.inr 2) := by
   simp only [ComplexVector.metricVal, Fin.isValue]
   rw [contrContrToMatrix_symm_expand_tmul]
   simp only [map_apply, ofRealHom_eq_coe, Fintype.sum_sum_type, Finset.univ_unique,
@@ -79,10 +79,10 @@ def ComplexCoVector.metricVal : (ComplexCoVector ⊗[ℂ] ComplexCoVector) :=
 
 /-- The expansion of `ComplexCoVector.metricVal` into basis vectors. -/
 lemma ComplexCoVector.metricVal_expand_tmul : ComplexCoVector.metricVal =
-    complexCoBasis (Sum.inl 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inl 0)
-    - complexCoBasis (Sum.inr 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 0)
-    - complexCoBasis (Sum.inr 1) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 1)
-    - complexCoBasis (Sum.inr 2) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 2) := by
+    ComplexCoVector.basis (Sum.inl 0) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inl 0)
+    - ComplexCoVector.basis (Sum.inr 0) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 0)
+    - ComplexCoVector.basis (Sum.inr 1) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 1)
+    - ComplexCoVector.basis (Sum.inr 2) ⊗ₜ[ℂ] ComplexCoVector.basis (Sum.inr 2) := by
   simp only [ComplexCoVector.metricVal, Fin.isValue]
   rw [coCoToMatrix_symm_expand_tmul]
   simp only [map_apply, ofRealHom_eq_coe, Fintype.sum_sum_type, Finset.univ_unique,

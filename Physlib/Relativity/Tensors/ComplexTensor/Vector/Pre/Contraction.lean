@@ -93,21 +93,22 @@ lemma ComplexVector.contr_tmul (ψ : ComplexVector) (φ : ComplexCoVector) :
   rfl
 
 lemma ComplexVector.contr_basis (i j : Fin 4) :
-    ComplexVector.contr (complexContrBasisFin4 i ⊗ₜ complexCoBasisFin4 j) =
+    ComplexVector.contr (ComplexVector.basisFin4 i ⊗ₜ ComplexCoVector.basisFin4 j) =
     if i.1 = j.1 then (1 : ℂ) else 0 := by
   rw [ComplexVector.contr_tmul]
-  simp only [complexContrBasisFin4, Basis.coe_reindex, Function.comp_apply,
-    complexContrBasis_toFin13ℂ, complexCoBasisFin4, complexCoBasis_toFin13ℂ, dotProduct_single,
-    mul_one]
+  simp only [ComplexVector.basisFin4, Basis.coe_reindex, Function.comp_apply,
+    ComplexVector.basis_toFin13ℂ, ComplexCoVector.basisFin4, ComplexCoVector.basis_toFin13ℂ,
+    dotProduct_single, mul_one]
   rw [Pi.single_apply]
   refine ite_congr ?h₁ (congrFun rfl) (congrFun rfl)
   simp only [EmbeddingLike.apply_eq_iff_eq, Fin.ext_iff, eq_comm]
 
 lemma ComplexVector.contr_basis' (i j : Fin 1 ⊕ Fin 3) :
-    ComplexVector.contr (complexContrBasis i ⊗ₜ complexCoBasis j) =
+    ComplexVector.contr (ComplexVector.basis i ⊗ₜ ComplexCoVector.basis j) =
     if i = j then (1 : ℂ) else 0 := by
   rw [ComplexVector.contr_tmul]
-  simp only [complexContrBasis_toFin13ℂ, complexCoBasis_toFin13ℂ, dotProduct_single, mul_one]
+  simp only [ComplexVector.basis_toFin13ℂ, ComplexCoVector.basis_toFin13ℂ, dotProduct_single,
+    mul_one]
   rw [Pi.single_apply]
   refine ite_congr ?h₁ (congrFun rfl) (congrFun rfl)
   exact Eq.propIntro (fun a => id (Eq.symm a)) fun a => id (Eq.symm a)
@@ -132,20 +133,22 @@ lemma ComplexCoVector.contr_tmul (φ : ComplexCoVector) (ψ : ComplexVector) :
   rfl
 
 lemma ComplexCoVector.contr_basis (i j : Fin 4) :
-    ComplexCoVector.contr (complexCoBasisFin4 i ⊗ₜ complexContrBasisFin4 j) =
+    ComplexCoVector.contr (ComplexCoVector.basisFin4 i ⊗ₜ ComplexVector.basisFin4 j) =
     if i.1 = j.1 then (1 : ℂ) else 0 := by
   rw [ComplexCoVector.contr_tmul]
-  simp only [complexCoBasisFin4, Basis.coe_reindex, Function.comp_apply, complexCoBasis_toFin13ℂ,
-    complexContrBasisFin4, complexContrBasis_toFin13ℂ, dotProduct_single, mul_one]
+  simp only [ComplexCoVector.basisFin4, Basis.coe_reindex, Function.comp_apply,
+    ComplexCoVector.basis_toFin13ℂ, ComplexVector.basisFin4, ComplexVector.basis_toFin13ℂ,
+    dotProduct_single, mul_one]
   rw [Pi.single_apply]
   refine ite_congr ?h₁ (congrFun rfl) (congrFun rfl)
   simp only [eq_comm, EmbeddingLike.apply_eq_iff_eq, Fin.ext_iff]
 
 lemma ComplexCoVector.contr_basis' (i j : Fin 1 ⊕ Fin 3) :
-    ComplexCoVector.contr (complexCoBasis i ⊗ₜ complexContrBasis j) =
+    ComplexCoVector.contr (ComplexCoVector.basis i ⊗ₜ ComplexVector.basis j) =
     if i = j then (1 : ℂ) else 0 := by
   rw [ComplexCoVector.contr_tmul]
-  simp only [complexCoBasis_toFin13ℂ, complexContrBasis_toFin13ℂ, dotProduct_single, mul_one]
+  simp only [ComplexCoVector.basis_toFin13ℂ, ComplexVector.basis_toFin13ℂ, dotProduct_single,
+    mul_one]
   rw [Pi.single_apply]
   refine ite_congr ?h₁ (congrFun rfl) (congrFun rfl)
   simp only [eq_comm]

@@ -95,12 +95,12 @@ lemma contr_basis_gaussianInt {c : complexLorentzTensor.Color}
     simp
   | Color.up =>
     change Lorentz.ComplexVector.contr
-      (Lorentz.complexContrBasisFin4 i ⊗ₜ Lorentz.complexCoBasisFin4 j) = _
+      (Lorentz.ComplexVector.basisFin4 i ⊗ₜ Lorentz.ComplexCoVector.basisFin4 j) = _
     rw [Lorentz.ComplexVector.contr_basis]
     simp
   | Color.down =>
     change Lorentz.ComplexVector.contr
-      (Lorentz.complexContrBasisFin4 i ⊗ₜ Lorentz.complexCoBasisFin4 j) = _
+      (Lorentz.ComplexVector.basisFin4 i ⊗ₜ Lorentz.ComplexCoVector.basisFin4 j) = _
     rw [Lorentz.ComplexVector.contr_basis]
     simp
 open TensorSpecies

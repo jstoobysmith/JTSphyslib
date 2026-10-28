@@ -202,10 +202,10 @@ lemma JetComponentSpace.jetDeriv_eq_ι (μ : Fin 1 ⊕ Fin 3) :
       = LinearMap.prodMap
         (TensorProduct.map
           (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.ComplexCoVector)
-            (Lorentz.complexCoBasis.dualBasis μ))) LinearMap.id)
+            (Lorentz.ComplexCoVector.basis.dualBasis μ))) LinearMap.id)
         (TensorProduct.map
           (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.ComplexCoVector)
-            (Lorentz.complexCoBasis.dualBasis μ))) LinearMap.id) := by
+            (Lorentz.ComplexCoVector.basis.dualBasis μ))) LinearMap.id) := by
   rw [JetComponentSpace.jetDeriv, SpaceTimeDerivAlgebraℂ.basis_singleton]
 
 @[simp]
