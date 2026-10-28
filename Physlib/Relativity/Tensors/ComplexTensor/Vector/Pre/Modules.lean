@@ -175,7 +175,7 @@ def lorentzGroupRep : Representation ℂ (LorentzGroup 3) ComplexCoVector where
     rw [Matrix.mul_inv_rev]
     exact transpose_mul _ _
 
-/-- The representation of the SL(2, ℂ) on `ComplexVector` induced by the representation of the
+/-- The representation of the SL(2, ℂ) on `ComplexCoVector` induced by the representation of the
   Lorentz group. -/
 def SL2CRep : Representation ℂ SL(2, ℂ) ComplexCoVector :=
   MonoidHom.comp lorentzGroupRep Lorentz.SL2C.toLorentzGroup
