@@ -70,14 +70,14 @@ multiset `s` of directions,
 The partial derivatives of a smooth field commute, so these polynomials are in commuting symbols
 `∂_μ`. Each symbol involves finitely many derivatives (whereas the Taylor series of a field keeps
 all of them). Formally, the derivative algebra is the symmetric algebra on
-`Module.Dual ℂ Lorentz.CoℂModule`, the dual of the complex covector module, with `∂_μ` the dual
-basis vector in direction `μ` and time coordinate `x⁰ = ct`.
+`Module.Dual ℂ Lorentz.ComplexCoVector`, the dual of the complex covector module, with `∂_μ` the
+dual basis vector in direction `μ` and time coordinate `x⁰ = ct`.
 
 -/
 
 /-- The algebra of derivative symbols on spacetime, the polynomials in four commuting symbols
   `∂_μ`. -/
-abbrev SpaceTimeDerivAlgebraℂ : Type := SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)
+abbrev SpaceTimeDerivAlgebraℂ : Type := SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.ComplexCoVector)
 
 namespace SpaceTimeDerivAlgebraℂ
 

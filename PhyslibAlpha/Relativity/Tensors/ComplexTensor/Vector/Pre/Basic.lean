@@ -16,7 +16,7 @@ How dual complex covectors transform, on the dual basis.
 
 A covector representation induces one on the dual space, and a classification of invariant
 tensors has to know how the dual basis transforms. For the complex covectors
-`Lorentz.CoℂModule` the answer is that dual covectors transform contravariantly: the dual
+`Lorentz.ComplexCoVector` the answer is that dual covectors transform contravariantly: the dual
 basis vector `e^μ` goes to the combination of dual basis vectors given by the column `μ` of the
 complexified Lorentz matrix. This is the complex analogue of
 `Lorentz.CoVector.sl2Rep_dual_dualBasis`, and is obtained from
@@ -25,7 +25,7 @@ complexified Lorentz matrix. This is the complex analogue of
 
 ## ii. Key results
 
-- `Lorentz.CoℂModule.SL2CRep_dual_dualBasis` : dual complex covectors transform by the columns
+- `Lorentz.ComplexCoVector.SL2CRep_dual_dualBasis` : dual complex covectors transform by the columns
   of the complexified Lorentz matrix.
 
 ## iii. Table of contents
@@ -57,19 +57,19 @@ namespace Lorentz
 /-- The dual of the complex covector representation on the dual basis: dual covectors
   transform contravariantly, by the columns of the (complexified) Lorentz matrix. The
   complex analogue of `Lorentz.CoVector.sl2Rep_dual_dualBasis`. -/
-lemma CoℂModule.SL2CRep_dual_dualBasis (Λ : SL(2,ℂ))
+lemma ComplexCoVector.SL2CRep_dual_dualBasis (Λ : SL(2,ℂ))
     (μ : Fin 1 ⊕ Fin 3) :
-    Lorentz.CoℂModule.SL2CRep.dual Λ (Lorentz.complexCoBasis.dualBasis μ) =
+    Lorentz.ComplexCoVector.SL2CRep.dual Λ (Lorentz.complexCoBasis.dualBasis μ) =
       ∑ j, (((Lorentz.SL2C.toLorentzGroup Λ).1 j μ : ℝ) : ℂ) •
         Lorentz.complexCoBasis.dualBasis j := by
   refine Representation.dual_apply_dualBasis _ _ _ _
     (Matrix.of fun l j => (((Lorentz.SL2C.toLorentzGroup Λ).1 j l : ℝ) : ℂ))
     (fun j => ?_)
-  have hexp : Lorentz.CoℂModule.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j) =
+  have hexp : Lorentz.ComplexCoVector.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j) =
       ∑ l, (LinearMap.toMatrix Lorentz.complexCoBasis Lorentz.complexCoBasis
-        (Lorentz.CoℂModule.SL2CRep Λ⁻¹)) l j • Lorentz.complexCoBasis l := by
+        (Lorentz.ComplexCoVector.SL2CRep Λ⁻¹)) l j • Lorentz.complexCoBasis l := by
     conv_lhs => rw [← Lorentz.complexCoBasis.sum_repr
-      (Lorentz.CoℂModule.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j))]
+      (Lorentz.ComplexCoVector.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j))]
     refine Finset.sum_congr rfl fun l _ => ?_
     rw [LinearMap.toMatrix_apply]
   rw [hexp]

@@ -96,8 +96,8 @@ abbrev modules : Color → Type
   | Color.downL => Fermion.DualLeftHandedWeyl
   | Color.upR => Fermion.RightHandedWeyl
   | Color.downR => Fermion.DualRightHandedWeyl
-  | Color.up => Lorentz.ContrℂModule
-  | Color.down => Lorentz.CoℂModule
+  | Color.up => Lorentz.ComplexVector
+  | Color.down => Lorentz.ComplexCoVector
 
 instance modulesAddCommGroup : ∀ c, AddCommGroup (modules c)
   | Color.upL => inferInstance
@@ -127,16 +127,16 @@ def complexLorentzTensor : TensorSpecies ℂ complexLorentzTensor.Color SL(2, �
       | Color.downL => Fermion.DualLeftHandedWeyl
       | Color.upR => Fermion.RightHandedWeyl
       | Color.downR => Fermion.DualRightHandedWeyl
-      | Color.up => Lorentz.ContrℂModule
-      | Color.down => Lorentz.CoℂModule)
+      | Color.up => Lorentz.ComplexVector
+      | Color.down => Lorentz.ComplexCoVector)
     (fun c => Fin (repDim c))
     (fun c => match c with
       | Color.upL => Fermion.LeftHandedWeyl.rep
       | Color.downL => Fermion.DualLeftHandedWeyl.rep
       | Color.upR => Fermion.RightHandedWeyl.rep
       | Color.downR => Fermion.DualRightHandedWeyl.rep
-      | Color.up => Lorentz.ContrℂModule.SL2CRep
-      | Color.down => Lorentz.CoℂModule.SL2CRep)
+      | Color.up => Lorentz.ComplexVector.SL2CRep
+      | Color.down => Lorentz.ComplexCoVector.SL2CRep)
     (fun c => match c with
     | Color.upL => Fermion.LeftHandedWeyl.basis
     | Color.downL => Fermion.DualLeftHandedWeyl.basis
@@ -167,40 +167,40 @@ def complexLorentzTensor : TensorSpecies ℂ complexLorentzTensor.Color SL(2, �
     | Color.downL => Fermion.DualLeftHandedWeyl.contr
     | Color.upR => Fermion.RightHandedWeyl.contr
     | Color.downR => Fermion.DualRightHandedWeyl.contr
-    | Color.up => Lorentz.ContrℂModule.contr
-    | Color.down => Lorentz.CoℂModule.contr
+    | Color.up => Lorentz.ComplexVector.contr
+    | Color.down => Lorentz.ComplexCoVector.contr
   unit := fun c =>
     match c with
     | Color.upL => Fermion.LeftHandedWeyl.unit
     | Color.downL => Fermion.DualLeftHandedWeyl.unit
     | Color.upR => Fermion.RightHandedWeyl.unit
     | Color.downR => Fermion.DualRightHandedWeyl.unit
-    | Color.up => Lorentz.ContrℂModule.unit
-    | Color.down => Lorentz.CoℂModule.unit
+    | Color.up => Lorentz.ComplexVector.unit
+    | Color.down => Lorentz.ComplexCoVector.unit
   contr_tmul_symm := fun c =>
     match c with
     | Color.upL => Fermion.LeftHandedWeyl.contr_tmul_symm
     | Color.downL => Fermion.DualLeftHandedWeyl.contr_tmul_symm
     | Color.upR => Fermion.RightHandedWeyl.contr_tmul_symm
     | Color.downR => Fermion.DualRightHandedWeyl.contr_tmul_symm
-    | Color.up => Lorentz.ContrℂModule.contr_tmul_symm
-    | Color.down => Lorentz.CoℂModule.contr_tmul_symm
+    | Color.up => Lorentz.ComplexVector.contr_tmul_symm
+    | Color.down => Lorentz.ComplexCoVector.contr_tmul_symm
   contr_unit := fun c =>
     match c with
     | Color.upL => Fermion.LeftHandedWeyl.contr_unit
     | Color.downL => Fermion.DualLeftHandedWeyl.contr_unit
     | Color.upR => Fermion.RightHandedWeyl.contr_unit
     | Color.downR => Fermion.DualRightHandedWeyl.contr_unit
-    | Color.up => Lorentz.ContrℂModule.contr_unit
-    | Color.down => Lorentz.CoℂModule.contr_unit
+    | Color.up => Lorentz.ComplexVector.contr_unit
+    | Color.down => Lorentz.ComplexCoVector.contr_unit
   unit_symm := fun c =>
     match c with
     | Color.upL => Fermion.LeftHandedWeyl.unit_symm
     | Color.downL => Fermion.DualLeftHandedWeyl.unit_symm
     | Color.upR => Fermion.RightHandedWeyl.unit_symm
     | Color.downR => Fermion.DualRightHandedWeyl.unit_symm
-    | Color.up => Lorentz.ContrℂModule.unit_symm
-    | Color.down => Lorentz.CoℂModule.unit_symm
+    | Color.up => Lorentz.ComplexVector.unit_symm
+    | Color.down => Lorentz.ComplexCoVector.unit_symm
 
 namespace complexLorentzTensor
 
@@ -213,16 +213,16 @@ instance instWithMetric : complexLorentzTensor.WithMetric where
     | Color.downL => Fermion.DualLeftHandedWeyl.metric
     | Color.upR => Fermion.RightHandedWeyl.metric
     | Color.downR => Fermion.DualRightHandedWeyl.metric
-    | Color.up => Lorentz.ContrℂModule.metric
-    | Color.down => Lorentz.CoℂModule.metric
+    | Color.up => Lorentz.ComplexVector.metric
+    | Color.down => Lorentz.ComplexCoVector.metric
   contr_metric := fun c =>
     match c with
     | Color.upL => Fermion.LeftHandedWeyl.contr_metric
     | Color.downL => Fermion.DualLeftHandedWeyl.contr_metric
     | Color.upR => Fermion.RightHandedWeyl.contr_metric
     | Color.downR => Fermion.DualRightHandedWeyl.contr_metric
-    | Color.up => Lorentz.ContrℂModule.contr_metric
-    | Color.down => Lorentz.CoℂModule.contr_metric
+    | Color.up => Lorentz.ComplexVector.contr_metric
+    | Color.down => Lorentz.ComplexCoVector.contr_metric
 
 /-- Complex Lorentz tensor. -/
 syntax (name := complexLorentzTensorSyntax) "ℂT[" term,* "]" : term
@@ -244,8 +244,8 @@ abbrev rep (c : Color) : Representation ℂ SL(2, ℂ) (modules c) :=
   | Color.downL => Fermion.DualLeftHandedWeyl.rep
   | Color.upR => Fermion.RightHandedWeyl.rep
   | Color.downR => Fermion.DualRightHandedWeyl.rep
-  | Color.up => Lorentz.ContrℂModule.SL2CRep
-  | Color.down => Lorentz.CoℂModule.SL2CRep
+  | Color.up => Lorentz.ComplexVector.SL2CRep
+  | Color.down => Lorentz.ComplexCoVector.SL2CRep
 
 macro_rules
   | `(ℂT[$term:term, $terms:term,*]) =>
@@ -277,7 +277,7 @@ lemma isContrDualMatching_finCongr (c : complexLorentzTensor.Color) :
   cases c <;> refine Eq.trans ?_ (if_congr Fin.ext_iff.symm rfl rfl)
   exacts [Fermion.LeftHandedWeyl.contr_basis x₁ x₂, Fermion.DualLeftHandedWeyl.contr_basis x₁ x₂,
     Fermion.RightHandedWeyl.contr_basis x₁ x₂, Fermion.DualRightHandedWeyl.contr_basis x₁ x₂,
-    Lorentz.ContrℂModule.contr_basis x₁ x₂, Lorentz.CoℂModule.contr_basis x₁ x₂]
+    Lorentz.ComplexVector.contr_basis x₁ x₂, Lorentz.ComplexCoVector.contr_basis x₁ x₂]
 
 /-- Complex Lorentz tensors have dual bases under contraction, with the matching
 `finCongr repDim_tau`. -/
@@ -343,15 +343,15 @@ def complexLorentzConjTensor : ConjTensorSpecies ℂ Color SL(2, ℂ) modules
           (Fermion.DualLeftHandedWeyl.rep g (Fermion.DualLeftHandedWeyl.basis i)) j)
       rw [Fermion.DualLeftHandedWeyl.rep_apply_basis_repr,
         Fermion.DualRightHandedWeyl.rep_apply_basis_repr]
-    · change Lorentz.complexContrBasisFin4.repr (Lorentz.ContrℂModule.SL2CRep g
+    · change Lorentz.complexContrBasisFin4.repr (Lorentz.ComplexVector.SL2CRep g
           (Lorentz.complexContrBasisFin4 i)) j = star (Lorentz.complexContrBasisFin4.repr
-          (Lorentz.ContrℂModule.SL2CRep g (Lorentz.complexContrBasisFin4 i)) j)
+          (Lorentz.ComplexVector.SL2CRep g (Lorentz.complexContrBasisFin4 i)) j)
       rw [Lorentz.complexContrBasisFin4_eq_reindex, Module.Basis.repr_reindex_apply,
         Module.Basis.reindex_apply, ← LinearMap.toMatrix_apply, Lorentz.complexContrBasis_ρ_apply,
         LorentzGroup.star_toComplex_apply]
-    · change Lorentz.complexCoBasisFin4.repr (Lorentz.CoℂModule.SL2CRep g
+    · change Lorentz.complexCoBasisFin4.repr (Lorentz.ComplexCoVector.SL2CRep g
           (Lorentz.complexCoBasisFin4 i)) j = star (Lorentz.complexCoBasisFin4.repr
-          (Lorentz.CoℂModule.SL2CRep g (Lorentz.complexCoBasisFin4 i)) j)
+          (Lorentz.ComplexCoVector.SL2CRep g (Lorentz.complexCoBasisFin4 i)) j)
       rw [Lorentz.complexCoBasisFin4_eq_reindex, Module.Basis.repr_reindex_apply,
         Module.Basis.reindex_apply, ← LinearMap.toMatrix_apply, Lorentz.complexCoBasis_ρ_apply,
         LorentzGroup.toComplex_inv, Matrix.transpose_apply, LorentzGroup.star_toComplex_apply]

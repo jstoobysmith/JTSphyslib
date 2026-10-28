@@ -26,59 +26,59 @@ open MatrixGroups
 open Complex
 
 /-- The module for contravariant (up-index) complex Lorentz vectors. -/
-structure ContrℂModule where
+structure ComplexVector where
   /-- The underlying value as a vector `Fin 1 ⊕ Fin 3 → ℂ`. -/
   val : Fin 1 ⊕ Fin 3 → ℂ
 
-namespace ContrℂModule
+namespace ComplexVector
 
-/-- The equivalence between `ContrℂModule` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
-def toFin13ℂFun : ContrℂModule ≃ (Fin 1 ⊕ Fin 3 → ℂ) where
+/-- The equivalence between `ComplexVector` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
+def toFin13ℂFun : ComplexVector ≃ (Fin 1 ⊕ Fin 3 → ℂ) where
   toFun v := v.val
   invFun f := ⟨f⟩
   left_inv _ := rfl
   right_inv _ := rfl
 
-/-- The instance of `AddCommMonoid` on `ContrℂModule` defined via its equivalence
+/-- The instance of `AddCommMonoid` on `ComplexVector` defined via its equivalence
   with `Fin 1 ⊕ Fin 3 → ℂ`. -/
-instance : AddCommMonoid ContrℂModule := Equiv.addCommMonoid toFin13ℂFun
+instance : AddCommMonoid ComplexVector := Equiv.addCommMonoid toFin13ℂFun
 
-/-- The instance of `AddCommGroup` on `ContrℂModule` defined via its equivalence
+/-- The instance of `AddCommGroup` on `ComplexVector` defined via its equivalence
   with `Fin 1 ⊕ Fin 3 → ℂ`. -/
-instance : AddCommGroup ContrℂModule := Equiv.addCommGroup toFin13ℂFun
+instance : AddCommGroup ComplexVector := Equiv.addCommGroup toFin13ℂFun
 
-/-- The additive equivalence between `ContrℂModule` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
-def toFin13ℂAddEquiv : ContrℂModule ≃+ (Fin 1 ⊕ Fin 3 → ℂ) :=
+/-- The additive equivalence between `ComplexVector` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
+def toFin13ℂAddEquiv : ComplexVector ≃+ (Fin 1 ⊕ Fin 3 → ℂ) :=
   { toFin13ℂFun with map_add' _ _ := rfl }
 
-/-- The instance of `Module` on `ContrℂModule` defined via its equivalence
+/-- The instance of `Module` on `ComplexVector` defined via its equivalence
   with `Fin 1 ⊕ Fin 3 → ℂ`. -/
-instance : Module ℂ ContrℂModule := AddEquiv.module ℂ toFin13ℂAddEquiv
+instance : Module ℂ ComplexVector := AddEquiv.module ℂ toFin13ℂAddEquiv
 
 @[ext]
-lemma ext (ψ ψ' : ContrℂModule) (h : ψ.val = ψ'.val) : ψ = ψ' := by
+lemma ext (ψ ψ' : ComplexVector) (h : ψ.val = ψ'.val) : ψ = ψ' := by
   cases ψ
   cases ψ'
   subst h
   rfl
 
 @[simp]
-lemma val_add (ψ ψ' : ContrℂModule) : (ψ + ψ').val = ψ.val + ψ'.val := rfl
+lemma val_add (ψ ψ' : ComplexVector) : (ψ + ψ').val = ψ.val + ψ'.val := rfl
 
 @[simp]
-lemma val_smul (r : ℂ) (ψ : ContrℂModule) : (r • ψ).val = r • ψ.val := rfl
+lemma val_smul (r : ℂ) (ψ : ComplexVector) : (r • ψ).val = r • ψ.val := rfl
 
-/-- The linear equivalence between `ContrℂModule` and `(Fin 1 ⊕ Fin 3 → ℂ)`. -/
+/-- The linear equivalence between `ComplexVector` and `(Fin 1 ⊕ Fin 3 → ℂ)`. -/
 @[simps!]
-def toFin13ℂEquiv : ContrℂModule ≃ₗ[ℂ] (Fin 1 ⊕ Fin 3 → ℂ) :=
+def toFin13ℂEquiv : ComplexVector ≃ₗ[ℂ] (Fin 1 ⊕ Fin 3 → ℂ) :=
   AddEquiv.linearEquiv ℂ toFin13ℂAddEquiv
 
-/-- The underlying element of `Fin 1 ⊕ Fin 3 → ℂ` of a element in `ContrℂModule` defined
+/-- The underlying element of `Fin 1 ⊕ Fin 3 → ℂ` of a element in `ComplexVector` defined
   through the linear equivalence `toFin13ℂEquiv`. -/
-abbrev toFin13ℂ (ψ : ContrℂModule) := toFin13ℂEquiv ψ
+abbrev toFin13ℂ (ψ : ComplexVector) := toFin13ℂEquiv ψ
 
-/-- The representation of the Lorentz group on `ContrℂModule`. -/
-def lorentzGroupRep : Representation ℂ (LorentzGroup 3) ContrℂModule where
+/-- The representation of the Lorentz group on `ComplexVector`. -/
+def lorentzGroupRep : Representation ℂ (LorentzGroup 3) ComplexVector where
   toFun M := {
       toFun := fun v => toFin13ℂEquiv.symm (LorentzGroup.toComplex M *ᵥ v.toFin13ℂ),
       map_add' := by
@@ -94,67 +94,67 @@ def lorentzGroupRep : Representation ℂ (LorentzGroup 3) ContrℂModule where
     ext i
     simp
 
-/-- The representation of the SL(2, ℂ) on `ContrℂModule` induced by the representation of the
+/-- The representation of the SL(2, ℂ) on `ComplexVector` induced by the representation of the
   Lorentz group. -/
-def SL2CRep : Representation ℂ SL(2, ℂ) ContrℂModule :=
+def SL2CRep : Representation ℂ SL(2, ℂ) ComplexVector :=
   MonoidHom.comp lorentzGroupRep Lorentz.SL2C.toLorentzGroup
 
-end ContrℂModule
+end ComplexVector
 
 /-- The module for covariant (up-index) complex Lorentz vectors. -/
-structure CoℂModule where
+structure ComplexCoVector where
   /-- The underlying value as a vector `Fin 1 ⊕ Fin 3 → ℂ`. -/
   val : Fin 1 ⊕ Fin 3 → ℂ
 
-namespace CoℂModule
+namespace ComplexCoVector
 
-/-- The equivalence between `CoℂModule` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
-def toFin13ℂFun : CoℂModule ≃ (Fin 1 ⊕ Fin 3 → ℂ) where
+/-- The equivalence between `ComplexCoVector` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
+def toFin13ℂFun : ComplexCoVector ≃ (Fin 1 ⊕ Fin 3 → ℂ) where
   toFun v := v.val
   invFun f := ⟨f⟩
   left_inv _ := rfl
   right_inv _ := rfl
 
-/-- The instance of `AddCommMonoid` on `CoℂModule` defined via its equivalence
+/-- The instance of `AddCommMonoid` on `ComplexCoVector` defined via its equivalence
   with `Fin 1 ⊕ Fin 3 → ℂ`. -/
-instance : AddCommMonoid CoℂModule := Equiv.addCommMonoid toFin13ℂFun
+instance : AddCommMonoid ComplexCoVector := Equiv.addCommMonoid toFin13ℂFun
 
-/-- The instance of `AddCommGroup` on `CoℂModule` defined via its equivalence
+/-- The instance of `AddCommGroup` on `ComplexCoVector` defined via its equivalence
   with `Fin 1 ⊕ Fin 3 → ℂ`. -/
-instance : AddCommGroup CoℂModule := Equiv.addCommGroup toFin13ℂFun
+instance : AddCommGroup ComplexCoVector := Equiv.addCommGroup toFin13ℂFun
 
-/-- The additive equivalence between `CoℂModule` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
-def toFin13ℂAddEquiv : CoℂModule ≃+ (Fin 1 ⊕ Fin 3 → ℂ) :=
+/-- The additive equivalence between `ComplexCoVector` and `Fin 1 ⊕ Fin 3 → ℂ`. -/
+def toFin13ℂAddEquiv : ComplexCoVector ≃+ (Fin 1 ⊕ Fin 3 → ℂ) :=
   { toFin13ℂFun with map_add' _ _ := rfl }
 
-/-- The instance of `Module` on `CoℂModule` defined via its equivalence
+/-- The instance of `Module` on `ComplexCoVector` defined via its equivalence
   with `Fin 1 ⊕ Fin 3 → ℂ`. -/
-instance : Module ℂ CoℂModule := AddEquiv.module ℂ toFin13ℂAddEquiv
+instance : Module ℂ ComplexCoVector := AddEquiv.module ℂ toFin13ℂAddEquiv
 
 @[ext]
-lemma ext (ψ ψ' : CoℂModule) (h : ψ.val = ψ'.val) : ψ = ψ' := by
+lemma ext (ψ ψ' : ComplexCoVector) (h : ψ.val = ψ'.val) : ψ = ψ' := by
   cases ψ
   cases ψ'
   subst h
   rfl
 
 @[simp]
-lemma val_add (ψ ψ' : CoℂModule) : (ψ + ψ').val = ψ.val + ψ'.val := rfl
+lemma val_add (ψ ψ' : ComplexCoVector) : (ψ + ψ').val = ψ.val + ψ'.val := rfl
 
 @[simp]
-lemma val_smul (r : ℂ) (ψ : CoℂModule) : (r • ψ).val = r • ψ.val := rfl
+lemma val_smul (r : ℂ) (ψ : ComplexCoVector) : (r • ψ).val = r • ψ.val := rfl
 
-/-- The linear equivalence between `CoℂModule` and `(Fin 1 ⊕ Fin 3 → ℂ)`. -/
+/-- The linear equivalence between `ComplexCoVector` and `(Fin 1 ⊕ Fin 3 → ℂ)`. -/
 @[simps!]
-def toFin13ℂEquiv : CoℂModule ≃ₗ[ℂ] (Fin 1 ⊕ Fin 3 → ℂ) :=
+def toFin13ℂEquiv : ComplexCoVector ≃ₗ[ℂ] (Fin 1 ⊕ Fin 3 → ℂ) :=
   AddEquiv.linearEquiv ℂ toFin13ℂAddEquiv
 
-/-- The underlying element of `Fin 1 ⊕ Fin 3 → ℂ` of a element in `CoℂModule` defined
+/-- The underlying element of `Fin 1 ⊕ Fin 3 → ℂ` of a element in `ComplexCoVector` defined
   through the linear equivalence `toFin13ℂEquiv`. -/
-abbrev toFin13ℂ (ψ : CoℂModule) := toFin13ℂEquiv ψ
+abbrev toFin13ℂ (ψ : ComplexCoVector) := toFin13ℂEquiv ψ
 
-/-- The representation of the Lorentz group on `CoℂModule`. -/
-def lorentzGroupRep : Representation ℂ (LorentzGroup 3) CoℂModule where
+/-- The representation of the Lorentz group on `ComplexCoVector`. -/
+def lorentzGroupRep : Representation ℂ (LorentzGroup 3) ComplexCoVector where
   toFun M := {
       toFun := fun v => toFin13ℂEquiv.symm ((LorentzGroup.toComplex M)⁻¹ᵀ *ᵥ v.toFin13ℂ),
       map_add' := by
@@ -175,12 +175,12 @@ def lorentzGroupRep : Representation ℂ (LorentzGroup 3) CoℂModule where
     rw [Matrix.mul_inv_rev]
     exact transpose_mul _ _
 
-/-- The representation of the SL(2, ℂ) on `ContrℂModule` induced by the representation of the
+/-- The representation of the SL(2, ℂ) on `ComplexVector` induced by the representation of the
   Lorentz group. -/
-def SL2CRep : Representation ℂ SL(2, ℂ) CoℂModule :=
+def SL2CRep : Representation ℂ SL(2, ℂ) ComplexCoVector :=
   MonoidHom.comp lorentzGroupRep Lorentz.SL2C.toLorentzGroup
 
-end CoℂModule
+end ComplexCoVector
 
 end
 end Lorentz

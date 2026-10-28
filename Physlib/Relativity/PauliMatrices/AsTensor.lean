@@ -34,7 +34,7 @@ open TensorProduct
 
 /-- The tensor `σ^μ^a^{dot a}` based on the Pauli-matrices as an element of
   `complexContr ⊗ leftHanded ⊗ rightHanded`. -/
-def asTensor : (ContrℂModule ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :=
+def asTensor : (ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :=
   ∑ i, complexContrBasis i ⊗ₜ leftRightToMatrix.symm (pauliBasis i)
 
 /-- The expansion of `asTensor` into complexContrBasis basis vectors . -/
@@ -95,7 +95,7 @@ set_option backward.isDefEq.respectTransparency false in
   the invariance under the `SL(2,ℂ)` action. -/
 def asConsTensor :
     (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
-    (ContrℂModule.SL2CRep.tprod (LeftHandedWeyl.rep.tprod RightHandedWeyl.rep)) where
+    (ComplexVector.SL2CRep.tprod (LeftHandedWeyl.rep.tprod RightHandedWeyl.rep)) where
 
     toFun := fun a =>
       let a' : ℂ := a
@@ -108,14 +108,14 @@ def asConsTensor :
     isIntertwining' M := by
       refine LinearMap.ext fun x : ℂ => ?_
       change x • asTensor =
-        (TensorProduct.map (ContrℂModule.SL2CRep M)
+        (TensorProduct.map (ComplexVector.SL2CRep M)
           (TensorProduct.map (LeftHandedWeyl.rep M) (RightHandedWeyl.rep M))) (x • asTensor)
       simp only [map_smul]
       apply congrArg
       nth_rewrite 2 [asTensor]
       simp only [map_sum, map_tmul]
       symm
-      calc _ = ∑ x, ((ContrℂModule.SL2CRep M) (complexContrBasis x) ⊗ₜ[ℂ]
+      calc _ = ∑ x, ((ComplexVector.SL2CRep M) (complexContrBasis x) ⊗ₜ[ℂ]
         leftRightToMatrix.symm (SL2C.toSelfAdjointMap M (pauliBasis x))) := by
             refine Finset.sum_congr rfl (fun x _ => ?_)
             rw [← leftRightToMatrix_ρ_symm_selfAdjoint]

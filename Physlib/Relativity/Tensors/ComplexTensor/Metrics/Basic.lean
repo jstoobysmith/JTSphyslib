@@ -85,13 +85,13 @@ open Tensor
 -/
 
 lemma coMetric_eq_fromConstPair : η' = fromConstPair (S := complexLorentzTensor)
-    (c1 := .down) (c2 := .down) Lorentz.CoℂModule.metric := by
-  rw [Lorentz.CoℂModule.metric]
+    (c1 := .down) (c2 := .down) Lorentz.ComplexCoVector.metric := by
+  rw [Lorentz.ComplexCoVector.metric]
   rfl
 
 lemma contrMetric_eq_fromConstPair : η = fromConstPair (S := complexLorentzTensor)
-    (c1 := .up) (c2 := .up) Lorentz.ContrℂModule.metric := by
-  rw [Lorentz.ContrℂModule.metric]
+    (c1 := .up) (c2 := .up) Lorentz.ComplexVector.metric := by
+  rw [Lorentz.ComplexVector.metric]
   rfl
 
 lemma leftMetric_eq_fromConstPair : εL = fromConstPair Fermion.LeftHandedWeyl.metric := rfl
@@ -109,15 +109,15 @@ lemma dualRightMetric_eq_fromConstPair :
 
 -/
 
-lemma coMetric_eq_fromPairT : η' = fromPairT (Lorentz.CoℂModule.metricVal) := by
+lemma coMetric_eq_fromPairT : η' = fromPairT (Lorentz.ComplexCoVector.metricVal) := by
   rw [coMetric_eq_fromConstPair, fromConstPair]
   congr 1
-  exact Lorentz.CoℂModule.metric_apply_one
+  exact Lorentz.ComplexCoVector.metric_apply_one
 
-lemma contrMetric_eq_fromPairT : η = fromPairT (Lorentz.ContrℂModule.metricVal) := by
+lemma contrMetric_eq_fromPairT : η = fromPairT (Lorentz.ComplexVector.metricVal) := by
   rw [contrMetric_eq_fromConstPair, fromConstPair]
   congr 1
-  exact Lorentz.ContrℂModule.metric_apply_one
+  exact Lorentz.ComplexVector.metric_apply_one
 
 lemma leftMetric_eq_fromPairT : εL = fromPairT (Fermion.LeftHandedWeyl.metricVal) := by
   rw [leftMetric_eq_fromConstPair, fromConstPair]
@@ -151,7 +151,7 @@ lemma coMetric_eq_complexCoBasis : η' =
     - fromPairT (complexCoBasis (Sum.inr 0) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 0))
     - fromPairT (complexCoBasis (Sum.inr 1) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 1))
     - fromPairT (complexCoBasis (Sum.inr 2) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 2)) := by
-  rw [coMetric_eq_fromPairT, CoℂModule.metricVal_expand_tmul]
+  rw [coMetric_eq_fromPairT, ComplexCoVector.metricVal_expand_tmul]
   simp
 
 open Lorentz in
@@ -170,7 +170,7 @@ lemma contrMetric_eq_complexContrBasis : η =
     - fromPairT (complexContrBasis (Sum.inr 0) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 0))
     - fromPairT (complexContrBasis (Sum.inr 1) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 1))
     - fromPairT (complexContrBasis (Sum.inr 2) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 2)) := by
-  rw [contrMetric_eq_fromPairT, ContrℂModule.metricVal_expand_tmul]
+  rw [contrMetric_eq_fromPairT, ComplexVector.metricVal_expand_tmul]
   simp
 
 open Lorentz in

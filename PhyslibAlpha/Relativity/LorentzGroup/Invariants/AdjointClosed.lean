@@ -83,7 +83,7 @@ lemma toMatrix_rep_up_apply (g : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3) :
       (complexLorentzTensor.rep .up g) (finSumFinEquiv μ) (finSumFinEquiv ν)
       = (((SL2C.toLorentzGroup g).1 μ ν : ℝ) : ℂ) := by
   change LinearMap.toMatrix (complexContrBasis.reindex finSumFinEquiv)
-    (complexContrBasis.reindex finSumFinEquiv) (ContrℂModule.SL2CRep g) _ _ = _
+    (complexContrBasis.reindex finSumFinEquiv) (ComplexVector.SL2CRep g) _ _ = _
   rw [LinearMap.toMatrix_apply, Module.Basis.reindex_apply, Module.Basis.repr_reindex_apply,
     Equiv.symm_apply_apply, Equiv.symm_apply_apply, ← LinearMap.toMatrix_apply,
     complexContrBasis_ρ_apply]
@@ -96,7 +96,7 @@ lemma toMatrix_rep_down_apply (g : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3) :
       (complexLorentzTensor.rep .down g) (finSumFinEquiv μ) (finSumFinEquiv ν)
       = (((SL2C.toLorentzGroup g)⁻¹.1 ν μ : ℝ) : ℂ) := by
   change LinearMap.toMatrix (complexCoBasis.reindex finSumFinEquiv)
-    (complexCoBasis.reindex finSumFinEquiv) (CoℂModule.SL2CRep g) _ _ = _
+    (complexCoBasis.reindex finSumFinEquiv) (ComplexCoVector.SL2CRep g) _ _ = _
   rw [LinearMap.toMatrix_apply, Module.Basis.reindex_apply, Module.Basis.repr_reindex_apply,
     Equiv.symm_apply_apply, Equiv.symm_apply_apply, ← LinearMap.toMatrix_apply,
     complexCoBasis_ρ_apply, Matrix.transpose_apply, LorentzGroup.toComplex_inv]

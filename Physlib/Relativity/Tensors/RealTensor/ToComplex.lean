@@ -369,8 +369,8 @@ lemma actionP_toComplexPure {n : ℕ} (c : Fin n → Color) (p : Pure realLorent
     | Color.downL => Fermion.DualLeftHandedWeyl.rep
     | Color.upR => Fermion.RightHandedWeyl.rep
     | Color.downR => Fermion.DualRightHandedWeyl.rep
-    | complexLorentzTensor.Color.up => Lorentz.ContrℂModule.SL2CRep
-    | complexLorentzTensor.Color.down => Lorentz.CoℂModule.SL2CRep
+    | complexLorentzTensor.Color.up => Lorentz.ComplexVector.SL2CRep
+    | complexLorentzTensor.Color.down => Lorentz.ComplexCoVector.SL2CRep
   let b' (c : Color) : Representation ℝ _ (realLorentzTensor.modules 3 c) :=
     (match c with
     | Color.up => Lorentz.ContrMod.rep
@@ -382,12 +382,12 @@ lemma actionP_toComplexPure {n : ℕ} (c : Fin n → Color) (p : Pure realLorent
   generalize c i = c at *
   fin_cases c
   · simp_all [P, b, b', colorToComplex]
-    exact ((congrArg (Lorentz.ContrℂModule.SL2CRep Λ)
+    exact ((congrArg (Lorentz.ComplexVector.SL2CRep Λ)
       (toComplexVector_up_eq_inclCongrRealLorentz p)).trans
         (Lorentz.inclCongrRealLorentz_ρ Λ p)).trans
       (toComplexVector_up_eq_inclCongrRealLorentz _).symm
   · simp_all [P, b, b', colorToComplex]
-    exact ((congrArg (Lorentz.CoℂModule.SL2CRep Λ)
+    exact ((congrArg (Lorentz.ComplexCoVector.SL2CRep Λ)
       (toComplexVector_down_eq_inclCoRealLorentz p)).trans
         (Lorentz.inclCoRealLorentz_ρ Λ p)).trans
       (toComplexVector_down_eq_inclCoRealLorentz _).symm

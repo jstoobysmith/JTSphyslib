@@ -201,10 +201,10 @@ lemma JetComponentSpace.jetDeriv_eq_ι (μ : Fin 1 ⊕ Fin 3) :
     JetComponentSpace.jetDeriv (M := M) μ
       = LinearMap.prodMap
         (TensorProduct.map
-          (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
+          (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.ComplexCoVector)
             (Lorentz.complexCoBasis.dualBasis μ))) LinearMap.id)
         (TensorProduct.map
-          (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
+          (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.ComplexCoVector)
             (Lorentz.complexCoBasis.dualBasis μ))) LinearMap.id) := by
   rw [JetComponentSpace.jetDeriv, SpaceTimeDerivAlgebraℂ.basis_singleton]
 
@@ -246,7 +246,7 @@ private lemma repLorentzGroup_tprod_mulRight_jetSymbol {W : Type*} [AddCommGroup
       ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
         SpaceTimeDerivAlgebraℂ.basis ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
     rw [SpaceTimeDerivAlgebraℂ.basis_singleton, SpaceTimeDerivAlgebraℂ.repLorentzGroup_apply_ι,
-      Lorentz.CoℂModule.SL2CRep_dual_dualBasis, map_sum]
+      Lorentz.ComplexCoVector.SL2CRep_dual_dualBasis, map_sum]
     exact Finset.sum_congr rfl fun a _ => by
       rw [map_smul, SpaceTimeDerivAlgebraℂ.basis_singleton]
   have hrep : ∀ (q : SpaceTimeDerivAlgebraℂ) (f : W),

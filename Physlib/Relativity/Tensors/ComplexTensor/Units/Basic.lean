@@ -84,12 +84,12 @@ scoped[complexLorentzTensor] notation "δR" => rightDualRightUnit
 
 -/
 
-lemma coContrUnit_eq_fromConstPair : δ' = fromConstPair Lorentz.ContrℂModule.unit := by
-  rw [Lorentz.ContrℂModule.unit]
+lemma coContrUnit_eq_fromConstPair : δ' = fromConstPair Lorentz.ComplexVector.unit := by
+  rw [Lorentz.ComplexVector.unit]
   rfl
 
-lemma contrCoUnit_eq_fromConstPair : δ = fromConstPair Lorentz.CoℂModule.unit := by
-  rw [Lorentz.CoℂModule.unit]
+lemma contrCoUnit_eq_fromConstPair : δ = fromConstPair Lorentz.ComplexCoVector.unit := by
+  rw [Lorentz.ComplexCoVector.unit]
   rfl
 
 lemma dualLeftLeftUnit_eq_fromConstPair : δL' = fromConstPair Fermion.LeftHandedWeyl.unit := by
@@ -115,15 +115,15 @@ lemma rightDualRightUnit_eq_fromConstPair :
 
 -/
 
-lemma coContrUnit_eq_fromPairT : δ' = fromPairT (Lorentz.ContrℂModule.unitVal) := by
+lemma coContrUnit_eq_fromPairT : δ' = fromPairT (Lorentz.ComplexVector.unitVal) := by
   rw [coContrUnit_eq_fromConstPair, fromConstPair]
   congr 1
-  exact Lorentz.ContrℂModule.unit_apply_one
+  exact Lorentz.ComplexVector.unit_apply_one
 
-lemma contrCoUnit_eq_fromPairT : δ = fromPairT (Lorentz.CoℂModule.unitVal) := by
+lemma contrCoUnit_eq_fromPairT : δ = fromPairT (Lorentz.ComplexCoVector.unitVal) := by
   rw [contrCoUnit_eq_fromConstPair, fromConstPair]
   congr 1
-  exact Lorentz.CoℂModule.unit_apply_one
+  exact Lorentz.ComplexCoVector.unit_apply_one
 
 lemma dualLeftLeftUnit_eq_fromPairT : δL' = fromPairT (Fermion.LeftHandedWeyl.unitVal) := by
   rw [dualLeftLeftUnit_eq_fromConstPair, fromConstPair]
@@ -154,7 +154,7 @@ lemma rightDualRightUnit_eq_fromPairT : δR = fromPairT (Fermion.DualRightHanded
 open Lorentz in
 lemma coContrUnit_eq_complexCoBasis_complexContrBasis : δ' =
     ∑ i, fromPairT (complexCoBasis i ⊗ₜ[ℂ] complexContrBasis i) := by
-  rw [coContrUnit_eq_fromPairT, ContrℂModule.unitVal_expand_tmul]
+  rw [coContrUnit_eq_fromPairT, ComplexVector.unitVal_expand_tmul]
   rfl
 
 open Lorentz in
@@ -167,7 +167,7 @@ lemma coContrUnit_eq_complexCoBasisFin4_complexContrBasisFin4 : δ' =
 open Lorentz in
 lemma contrCoUnit_eq_complexContrBasis_complexCoBasis : δ =
     ∑ i, fromPairT (complexContrBasis i ⊗ₜ[ℂ] complexCoBasis i) := by
-  rw [contrCoUnit_eq_fromPairT, CoℂModule.unitVal_expand_tmul]
+  rw [contrCoUnit_eq_fromPairT, ComplexCoVector.unitVal_expand_tmul]
   rfl
 
 open Lorentz in
