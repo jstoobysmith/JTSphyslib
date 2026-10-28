@@ -26,7 +26,7 @@ namespace Lorentz
 
 /-- The bi-linear map corresponding to contraction of a contravariant Lorentz vector with a
   covariant Lorentz vector. -/
-def contrCoContrBi : ComplexVector →ₗ[ℂ] ComplexCoVector →ₗ[ℂ] ℂ where
+def ComplexVector.contrBi : ComplexVector →ₗ[ℂ] ComplexCoVector →ₗ[ℂ] ℂ where
   toFun ψ := {
     toFun := fun φ => ψ.toFin13ℂ ⬝ᵥ φ.toFin13ℂ,
     map_add' := by
@@ -50,7 +50,7 @@ def contrCoContrBi : ComplexVector →ₗ[ℂ] ComplexCoVector →ₗ[ℂ] ℂ w
 
 /-- The bi-linear map corresponding to contraction of a covariant Lorentz vector with a
   contravariant Lorentz vector. -/
-def contrContrCoBi : ComplexCoVector →ₗ[ℂ] ComplexVector →ₗ[ℂ] ℂ where
+def ComplexCoVector.contrBi : ComplexCoVector →ₗ[ℂ] ComplexVector →ₗ[ℂ] ℂ where
   toFun φ := {
     toFun := fun ψ => φ.toFin13ℂ ⬝ᵥ ψ.toFin13ℂ,
     map_add' := by
@@ -79,7 +79,7 @@ def contrContrCoBi : ComplexCoVector →ₗ[ℂ] ComplexVector →ₗ[ℂ] ℂ w
     In terms of index notation this is the contraction is ψⁱ φᵢ. -/
 def ComplexVector.contr : (ComplexVector.SL2CRep.tprod ComplexCoVector.SL2CRep).IntertwiningMap
     (Representation.trivial ℂ SL(2,ℂ) ℂ) where
-  toLinearMap := TensorProduct.lift contrCoContrBi
+  toLinearMap := TensorProduct.lift ComplexVector.contrBi
   isIntertwining' M := TensorProduct.ext' fun ψ φ => by
     change ((LorentzGroup.toComplex (SL2C.toLorentzGroup M)) *ᵥ ψ.toFin13ℂ) ⬝ᵥ
       ((LorentzGroup.toComplex (SL2C.toLorentzGroup M))⁻¹ᵀ *ᵥ φ.toFin13ℂ) =
@@ -120,7 +120,7 @@ lemma ComplexVector.contr_basis' (i j : Fin 1 ⊕ Fin 3) :
     In terms of index notation this is the contraction is φᵢ ψⁱ. -/
 def ComplexCoVector.contr : (ComplexCoVector.SL2CRep.tprod ComplexVector.SL2CRep).IntertwiningMap
     (Representation.trivial ℂ SL(2,ℂ) ℂ) where
-  toLinearMap := TensorProduct.lift contrContrCoBi
+  toLinearMap := TensorProduct.lift ComplexCoVector.contrBi
   isIntertwining' M := TensorProduct.ext' fun φ ψ => by
     change ((LorentzGroup.toComplex (SL2C.toLorentzGroup M))⁻¹ᵀ *ᵥ φ.toFin13ℂ) ⬝ᵥ
       ((LorentzGroup.toComplex (SL2C.toLorentzGroup M)) *ᵥ ψ.toFin13ℂ) = φ.toFin13ℂ ⬝ᵥ ψ.toFin13ℂ
