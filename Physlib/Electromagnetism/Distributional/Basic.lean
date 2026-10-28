@@ -32,7 +32,8 @@ definition of distribution is over the reals ℝ.
 ## iii. Table of contents
 
 - A. The electromagnetic potential as a distribution
-  - A.1. Equivalence to Distributions
+  - A.1. Equivalence to distributions
+- B. Functions as distributions
 
 ## iv. References
 
@@ -45,6 +46,7 @@ definition of distribution is over the reals ℝ.
 namespace Electromagnetism
 open Distributions
 open Module realLorentzTensor
+open SpaceTime
 open TensorSpecies
 open Tensor
 
@@ -63,7 +65,7 @@ namespace DistElectromagneticPotential
 
 /-!
 
-### A.1. Equivalence to Distributions
+### A.1. Equivalence to distributions
 
 -/
 
@@ -92,4 +94,18 @@ noncomputable def valLinearEquiv {d : ℕ} :
       𝓓'(⟨Set.univ (α := SpaceTime d), isOpen_univ⟩, Lorentz.Vector d) :=
   AddEquiv.linearEquiv ℝ { valEquiv with map_add' _ _ := rfl }
 
+/-!
+
+## B. Functions as distributions
+
+-/
+
+/-- The distribution induced by a spacetime function. -/
+noncomputable def ofFunction {d} (f : SpaceTime d → Lorentz.Vector d) :
+    DistElectromagneticPotential d where
+  val := Distribution.ofFun
+    ⟨Set.univ (α := SpaceTime d), isOpen_univ⟩ f (n := ⊤)
+
 end DistElectromagneticPotential
+
+end Electromagnetism

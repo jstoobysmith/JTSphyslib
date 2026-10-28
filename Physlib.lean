@@ -19,6 +19,7 @@ public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Trajectory
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution
 public import Physlib.ClassicalMechanics.HarmonicOscillator.WithDim
 public import Physlib.ClassicalMechanics.Lagrangian.Basic
+public import Physlib.ClassicalMechanics.Lagrangian.CriticalPoint
 public import Physlib.ClassicalMechanics.Lagrangian.FirstVariation
 public import Physlib.ClassicalMechanics.Lagrangian.TotalDerivativeEquivalence
 public import Physlib.ClassicalMechanics.Mass.MassUnit
@@ -57,6 +58,7 @@ public import Physlib.CondensedMatter.Crystal.Bravais.Basic
 public import Physlib.CondensedMatter.Crystal.Embedding
 public import Physlib.CondensedMatter.Crystal.PeriodicGraph
 public import Physlib.CondensedMatter.Crystal.Symmetries
+public import Physlib.CondensedMatter.Crystal.Symmetry.Isometries
 public import Physlib.CondensedMatter.Crystal.Symmetry.PointOperations
 public import Physlib.CondensedMatter.LatticeModels.Basic
 public import Physlib.CondensedMatter.ManyBody.Basic
@@ -187,6 +189,7 @@ public import Physlib.Mathematics.VariationalCalculus.Basic
 public import Physlib.Mathematics.VariationalCalculus.HasVarAdjDeriv
 public import Physlib.Mathematics.VariationalCalculus.HasVarAdjoint
 public import Physlib.Mathematics.VariationalCalculus.HasVarGradient
+public import Physlib.Mathematics.VariationalCalculus.Interval
 public import Physlib.Mathematics.VariationalCalculus.IsLocalizedfunctionTransform
 public import Physlib.Mathematics.VariationalCalculus.IsTestFunction
 public import Physlib.Meta.AllFilePaths
@@ -245,12 +248,12 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.Basic
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.Lemmas
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.LinearParameterization
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
-public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet
+public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
