@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Tensors.ComplexTensor.Matrix.Pre
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Contraction
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Contraction
 /-!
 
 # Unit for complex Lorentz vectors

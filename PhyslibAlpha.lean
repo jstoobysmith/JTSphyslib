@@ -714,7 +714,7 @@ public import PhyslibAlpha.Relativity.PauliMatrices.SelfAdjoint
 public import PhyslibAlpha.Relativity.PauliMatrices.ToTensor
 public import PhyslibAlpha.Relativity.SL2C.AxisRotations
 public import PhyslibAlpha.Relativity.SL2C.Basic
-public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Basic
 public import PhyslibAlpha.Relativity.Tensors.Equivariant
 public import PhyslibAlpha.Relativity.Tensors.RealTensor.CoVector.Representation
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.HalfPlane

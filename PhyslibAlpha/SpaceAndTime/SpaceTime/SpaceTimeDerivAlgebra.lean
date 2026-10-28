@@ -7,7 +7,7 @@ module
 
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import PhyslibAlpha.Mathematics.ForMathlib.Fin
-public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Basic
 public import PhyslibAlpha.Relativity.Tensors.RealTensor.CoVector.Representation
 public import PhyslibAlpha.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra.Basic

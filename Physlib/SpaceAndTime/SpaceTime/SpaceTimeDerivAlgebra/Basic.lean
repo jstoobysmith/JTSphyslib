@@ -6,7 +6,7 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 module
 
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 /-!
 

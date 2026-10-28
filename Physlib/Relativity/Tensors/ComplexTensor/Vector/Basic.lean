@@ -5,7 +5,7 @@ Authors: Nikolai Kashcheev, Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Modules
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Modules
 /-!
 
 # Complex Lorentz vectors

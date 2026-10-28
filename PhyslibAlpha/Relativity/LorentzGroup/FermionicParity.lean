@@ -7,7 +7,7 @@ module
 
 public import PhyslibAlpha.Relativity.SL2C.Basic
 public import Physlib.Relativity.Fermions.Weyl.RightHanded
-public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Basic
 /-!
 
 # Fermionic parity

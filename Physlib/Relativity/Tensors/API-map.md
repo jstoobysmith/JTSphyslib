@@ -301,9 +301,9 @@ indices. [62]
    `leviCivita_contract_self`, `leviCivita_contract_three`
 53. Physlib/Relativity/Tensors/ComplexTensor/Basic.lean — `complexLorentzTensor`,
    `complexLorentzTensor.Color`, `repDim`, `basis`, `rep`, `contrPCoeff_basis`
-54. Physlib/Relativity/Tensors/ComplexTensor/Vector/Pre/Modules.lean — `ComplexVector`,
+54. Physlib/Relativity/Tensors/ComplexTensor/Vector/Modules.lean — `ComplexVector`,
    `ComplexCoVector`, `ComplexVector.SL2CRep`, `ComplexCoVector.SL2CRep`
-55. Physlib/Relativity/Tensors/ComplexTensor/Vector/Pre/Contraction.lean — `ComplexVector.contr`,
+55. Physlib/Relativity/Tensors/ComplexTensor/Vector/Contraction.lean — `ComplexVector.contr`,
    `ComplexCoVector.contr`
 56. Physlib/Relativity/Tensors/ComplexTensor/Metrics/Basic.lean — `coMetric`, `contrMetric`,
    `leftMetric`, `rightMetric`, `dualLeftMetric`, `dualRightMetric`,

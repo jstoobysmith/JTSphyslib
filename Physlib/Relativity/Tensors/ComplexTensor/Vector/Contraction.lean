@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
 /-!
 
 # Contraction of Lorentz vectors

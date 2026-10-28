@@ -5,7 +5,7 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
 public import PhyslibAlpha.Mathematics.RepresentationDual
 /-!
 # The dual of the complex covector representation
@@ -35,7 +35,7 @@ complexified Lorentz matrix. This is the complex analogue of
 ## iv. References
 
 The complex covector representation is in
-`Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic`.
+`Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic`.
 
 -/
 

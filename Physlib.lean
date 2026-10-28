@@ -493,9 +493,9 @@ public import Physlib.Relativity.Tensors.ComplexTensor.OfGaussianInt
 public import Physlib.Relativity.Tensors.ComplexTensor.Units.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Units.Pre
 public import Physlib.Relativity.Tensors.ComplexTensor.Units.Symm
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Contraction
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Modules
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Contraction
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Modules
 public import Physlib.Relativity.Tensors.ComponentIdx.Basic
 public import Physlib.Relativity.Tensors.ComponentIdx.Contraction
 public import Physlib.Relativity.Tensors.ComponentIdx.Insert
