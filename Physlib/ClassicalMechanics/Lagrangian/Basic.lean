@@ -23,7 +23,6 @@ The motions of a Lagrangian system are the critical points of its action.
 ## ii. Key results
 
 - `LagrangianSystem` : smooth time-dependent Lagrangians on `TM`.
-- `LagrangianSystem.add_apply` : Lagrangian systems add pointwise.
 - `LagrangianSystem.coord` : `L` in a time coordinate.
 - `LagrangianSystem.action` : the action of a curve.
 - `LagrangianSystem.IsCriticalPoint` : critical points of the action.

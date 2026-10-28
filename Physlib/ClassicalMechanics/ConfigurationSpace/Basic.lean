@@ -60,6 +60,6 @@ attribute [instance] ConfigurationSpace.topologicalSpace ConfigurationSpace.char
 
 TODO "Add a constructor for ConfigurationSpace for a point particle in `d`-dimensions."
 
-TODO "Define (in an suitable file)`PhaseSpace` from a configuration space."
+TODO "Define (in a suitable file)`PhaseSpace` from a configuration space."
 
 end ClassicalMechanics
