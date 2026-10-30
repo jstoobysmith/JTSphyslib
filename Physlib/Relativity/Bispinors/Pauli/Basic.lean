@@ -60,32 +60,6 @@ lemma pauliVal_repr (μ : Fin 1 ⊕ Fin 3) (a b : Fin 2) :
   simp [- Fintype.sum_sum_type, pauliVal, Module.Basis.tensorProduct_repr_tmul_apply,
     Finsupp.single_apply, hlr, pauliBasis, pauliSelfAdjoint]
 
-open TensorSpecies Tensor in
-/-- The components of the Pauli tensor `toTensor pauliVal` are the entries of the Pauli matrices,
-  `σ^μ_{a ḃ}`. -/
-lemma toTensor_pauliVal_basis_repr (φ : ComponentIdx (S := complexLorentzTensor)
-    (Fin.append ![.up] (Fin.append ![.upL] ![.upR]))) :
-    (Tensor.basis _).repr (Tensorial.toTensor pauliVal) φ = pauliMatrix (φ 0) (φ 1) (φ 2) := by
-  have hreindex {ι ι' κ κ' N₁ N₂ : Type} [Fintype ι] [Fintype κ] [DecidableEq ι] [DecidableEq κ]
-      [AddCommGroup N₁] [Module ℂ N₁] [AddCommGroup N₂] [Module ℂ N₂]
-      (b₁ : Module.Basis ι ℂ N₁) (b₂ : Module.Basis κ ℂ N₂) (e₁ : ι ≃ ι') (e₂ : κ ≃ κ') :
-      (b₁.reindex e₁).tensorProduct (b₂.reindex e₂) =
-        (b₁.tensorProduct b₂).reindex (e₁.prodCongr e₂) :=
-    Module.Basis.eq_of_apply_eq fun i => by
-      simp [Module.Basis.tensorProduct_apply']
-  have hright {ι κ κ' N₁ N₂ : Type} [Fintype ι] [Fintype κ] [DecidableEq ι] [DecidableEq κ]
-      [AddCommGroup N₁] [Module ℂ N₁] [AddCommGroup N₂] [Module ℂ N₂]
-      (b₁ : Module.Basis ι ℂ N₁) (b₂ : Module.Basis κ ℂ N₂) (e₂ : κ ≃ κ') :
-      b₁.tensorProduct (b₂.reindex e₂) =
-        (b₁.tensorProduct b₂).reindex ((Equiv.refl ι).prodCongr e₂) :=
-    Module.Basis.eq_of_apply_eq fun i => by
-      simp [Module.Basis.tensorProduct_apply']
-  rw [Tensorial.basis_repr_toTensor_prod, ComplexVector.basis_map_toTensor_symm,
-    Tensorial.basis_map_prod, LeftHandedWeyl.basis_map_toTensor_symm,
-    RightHandedWeyl.basis_map_toTensor_symm, hreindex LeftHandedWeyl.basis RightHandedWeyl.basis,
-    hreindex, Module.Basis.repr_reindex_apply, hright, Module.Basis.repr_reindex_apply]
-  exact pauliVal_repr _ _ _
-
 /-- The expansion of `ComplexVector.pauliVal` into the basis of tensor product vectors. -/
 lemma pauliVal_expand_tmul : ComplexVector.pauliVal =
     ComplexVector.basis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
