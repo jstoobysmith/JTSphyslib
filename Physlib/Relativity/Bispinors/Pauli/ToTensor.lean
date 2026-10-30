@@ -6,7 +6,7 @@ Authors: Robert Sneiderman, Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Tensors.ComplexTensor.Metrics.Basic
-public import Physlib.Relativity.Bispinors.Pauli.AsTensor
+public import Physlib.Relativity.Bispinors.Pauli.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Metrics.Basic
 /-!
 
@@ -29,6 +29,9 @@ open complexLorentzTensor
 open TensorSpecies
 open Tensor
 open Tensorial
+
+TODO "Remove the constructions in this file, and this file
+  all together. Replace the Pauli matrices in it with `ComplexVector.pauli`."
 
 /-!
 

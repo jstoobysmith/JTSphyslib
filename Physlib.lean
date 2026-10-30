@@ -449,7 +449,7 @@ public import Physlib.QuantumMechanics.QuantumSystem.Basic
 public import Physlib.QuantumMechanics.RectangularBarrier.Basic
 public import Physlib.QuantumMechanics.SpaceDQuantumSystem
 public import Physlib.Relativity.Bispinors.Basic
-public import Physlib.Relativity.Bispinors.Pauli.AsTensor
+public import Physlib.Relativity.Bispinors.Pauli.Basic
 public import Physlib.Relativity.Bispinors.Pauli.Relations
 public import Physlib.Relativity.Bispinors.Pauli.ToTensor
 public import Physlib.Relativity.Causality.Basic

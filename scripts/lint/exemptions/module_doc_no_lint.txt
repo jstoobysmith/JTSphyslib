@@ -263,7 +263,7 @@ Physlib/QuantumMechanics/Operators/StateObservables/Variance.lean
 Physlib/QuantumMechanics/Operators/Unbounded.lean
 Physlib/QuantumMechanics/PlanckConstant.lean
 Physlib/Relativity/Bispinors/Basic.lean
-Physlib/Relativity/Bispinors/Pauli/AsTensor.lean
+Physlib/Relativity/Bispinors/Pauli/Basic.lean
 Physlib/Relativity/Bispinors/Pauli/Relations.lean
 Physlib/Relativity/Bispinors/Pauli/ToTensor.lean
 Physlib/Relativity/Causality/Basic.lean
