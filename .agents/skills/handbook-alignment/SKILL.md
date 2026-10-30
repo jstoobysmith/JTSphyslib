@@ -17,12 +17,11 @@ Firstly we have to decide two things. Firstly, what changes we need to check, an
 
 The request should either have a PR number e.g. `#1049` (we will use `#<N>` to describe a PR) or say `local`. If it does not, then you should ask the user for one.
 
-It may also (optionally) have a list of handbook files e.g. `Basic, Naming, References`. If it does we will only run our test on these files. If not such list is provided, we will run it on all the files appearing in `./docs/ContributionHandbook/`.
 
 Now we have to create a local copy of the repo for the changes.
 Importantly, you should never `build` the project.
 
-Create a new empy scratch directory, which we will call `WORK` below. For PR we will use a dedicated worktree:
+Create a new empty scratch directory, which we will call `WORK` below. For PR we will use a dedicated worktree:
 
 ```bash
 git fetch https://github.com/leanprover-community/physlib.git "pull/<N>/head"
@@ -34,7 +33,7 @@ gh pr diff <N> --repo leanprover-community/physlib > "$WORK/pr-<N>.diff"
 
 In WORK this creates two files `pr-<N>.json` containing a summary of the PR information, and `pr-<N>.diff` containing the diff; along with the repo in `pr-<N>`.
 
-If the changes are `local` you will use the repository directly instead of creating a copy of it in `WORK`. However, we will write the changes to `local.diff` and as well as any untracked files to `local-untracted.txt` in the `WORK` directory. This is should be done using:
+If the changes are `local` you will use the repository directly instead of creating a copy of it in `WORK`. However, we will write the changes to `local.diff` and as well as any untracked files to `local-untracked.txt` in the `WORK` directory. This should be done using:
 
 ```bash
 git fetch https://github.com/leanprover-community/physlib.git master
@@ -42,11 +41,11 @@ git diff "$(git merge-base HEAD FETCH_HEAD)" > "$WORK/local.diff"
 git ls-files --others --exclude-standard > "$WORK/local-untracked.txt"
 ```
 
-You should also determine where a copy of Mathlib is. Use a checkout where there is a `.lake/packages/mathlib` file (usually the directory this skill was called from). Do not make your own at any point. If there is a disagreement in the Mathlib version between the one found and the one needed for the changes, let the user know. Again, do not make or download your own copy.
+You should also determine where a copy of Mathlib is. Use a checkout where there is a `.lake/packages/mathlib` folder (usually the directory this skill was called from). Do not make your own at any point. If there is a disagreement in the Mathlib version between the one found and the one needed for the changes, let the user know. Again, do not make or download your own copy.
 
 ## Step 2: Running the alignment tests
 
-We know want to run the alignment task for each file `<name>` within `docs/ContributionHandbook/`.  To do this:
+We now want to run the alignment task for each selected handbook file `docs/ContributionHandbook/<name>.md`. To do this:
 
 1. Create a prompt for each pass using:
   - The text in `.agents/skills/handbook-alignment/protocol.md`
