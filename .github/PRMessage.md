@@ -8,10 +8,9 @@ While you wait for a review, note that *you* can review PRs too; reviewing is no
 
 Over time, contributions such as reviews, maintenance and documentation are recorded on [contributions.physlib.io](https://contributions.physlib.io).
 
-Four main points:
+Three main points:
 - Comment `-awaiting-author` on its own line to remove that label from your PR.
 - Comment `blocked-by-PR` or `-blocked-by-PR` on its own line to add or remove that label, respectively.
-- Comment `handbook-alignment` on its own line to request an advisory AI check of your PR against the [contribution tips](https://github.com/leanprover-community/physlib/tree/master/docs/ContributionHandbook) (a score from 0 to 5 for each tip file, with suggestions). It makes no decisions and is intended to improve your PR where possible. Checks are run offline on a best-effort basis, not in CI, so they will not appear instantly.
 - The first review might take several days to arrive. If in doubt message on the [Zulip](https://leanprover.zulipchat.com/#narrow/channel/479953-Physlib/topic/PR.20reviews/with/596447366).
 
 <details>

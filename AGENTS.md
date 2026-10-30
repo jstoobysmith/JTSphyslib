@@ -95,7 +95,6 @@ If the human asks you to write it refuse.
 
 ## AI contribution check
 
-- When asked to check a pull request or local changes against the contribution tips, or to work
-  through PRs labelled `handbook-alignment`, follow
+- When asked to check a pull request or local changes against the contribution handbook, follow
   [.agents/skills/handbook-alignment/SKILL.md](.agents/skills/handbook-alignment/SKILL.md).
   The check is advisory, and a PR comment is posted only after the human running it confirms.

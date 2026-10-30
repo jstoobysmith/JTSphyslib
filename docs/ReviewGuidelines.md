@@ -107,19 +107,15 @@ To keep track of PRs, reviewers can "claim" PRs and promise to review them withi
 
 ## AI contribution check
 
-Anyone can ask for an advisory AI check of a PR by commenting `handbook-alignment` on its own
-line, which adds the `handbook-alignment` label and so queues the PR
-(`-handbook-alignment` removes it). The check scores the PR from 0 to 5 against each file of
-the [contribution tips](ContributionHandbook/), with constructive suggestions that each point to the
-tip they concern, in a single comment on the PR.
+Anyone can run an advisory AI check of a PR against the
+[contribution handbook](ContributionHandbook/). The check scores the PR from 0 to 5 against each
+file of the handbook, with suggested improvements.
 
 The check makes no decisions and is intended to improve your PR where possible. Scores are not
-thresholds: reviewers and maintainers make every decision about a PR.
+thresholds. Reviewers and maintainers make every decision about a PR.
 
-Checks are run by people, not by CI, with the AI agent of their choice: ask the agent to follow
+Checks are run by people, not by CI, with the AI agent of their choice. Ask the agent to follow
 [.agents/skills/handbook-alignment/SKILL.md](../.agents/skills/handbook-alignment/SKILL.md)
-(in Claude Code, `/handbook-alignment <PR number>`, or `/handbook-alignment` to work
-through the queue). The person running it reviews the comment before it is posted, and posting
-removes the label; add the label again to request a new check after further changes. Authors can
-also check their own work before opening a PR with `/handbook-alignment local`, which shows
-the result without posting anything.
+(in Claude Code, `/handbook-alignment <PR number>`). The person running it reads the report and
+chooses whether to post it on the PR. Authors can also check their own work before opening a PR
+with `/handbook-alignment local`, which shows the result without posting anything.
