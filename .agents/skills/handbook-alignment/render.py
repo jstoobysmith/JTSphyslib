@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Helpers for the `ai-contribution-check` skill (see SKILL.md next to this file).
+Helpers for the `handbook-alignment` skill (see SKILL.md next to this file).
 
-The passes of a check, one per file of contribution tips in `docs/ContributionTips/`, are run
+The passes of a check, one per file of contribution tips in `docs/ContributionHandbook/`, are run
 by whatever AI agent the person running the skill uses; this script does the deterministic
 parts, so that the report has the same format whatever the agent or model:
 
@@ -23,8 +23,8 @@ Sample usage:
     $ python3 render.py render results/ --local --model "<model>" > report.md
     $ gh api repos/leanprover-community/physlib/issues/comments/<id> --jq .body | python3 render.py meta
 
-A PR comment starts with the `<!-- physlib-ai-contribution-check -->` marker, by which the skill
-finds it again to edit it in place, and holds a `<!-- physlib-ai-contribution-check:meta {...} -->`
+A PR comment starts with the `<!-- physlib-handbook-alignment -->` marker, by which the skill
+finds it again to edit it in place, and holds a `<!-- physlib-handbook-alignment:meta {...} -->`
 record of the head commit, the tip files checked and the scores, by which the skill sees whether
 it is current. Only the standard library is used.
 """
@@ -38,16 +38,16 @@ import subprocess
 import sys
 
 REPO = "leanprover-community/physlib"
-MARKER = "<!-- physlib-ai-contribution-check -->"
-META_PREFIX = "<!-- physlib-ai-contribution-check:meta "
-META_RE = re.compile(r"<!-- physlib-ai-contribution-check:meta (\{.*?\}) -->", re.DOTALL)
+MARKER = "<!-- physlib-handbook-alignment -->"
+META_PREFIX = "<!-- physlib-handbook-alignment:meta "
+META_RE = re.compile(r"<!-- physlib-handbook-alignment:meta (\{.*?\}) -->", re.DOTALL)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TIPS_DIR = os.path.normpath(os.path.join(HERE, "..", "..", "..", "docs", "ContributionTips"))
-TIPS_PATH = "docs/ContributionTips"
+TIPS_DIR = os.path.normpath(os.path.join(HERE, "..", "..", "..", "docs", "ContributionHandbook"))
+TIPS_PATH = "docs/ContributionHandbook"
 
 # The order in which tip files are shown; a tip file not listed here comes after these, in
-# alphabetical order, so that a new file in `docs/ContributionTips/` is checked automatically.
+# alphabetical order, so that a new file in `docs/ContributionHandbook/` is checked automatically.
 ORDER = [
     "Basic",
     "Correctness",
@@ -289,7 +289,7 @@ def render(results, model, pr=None, sha=None, local=False, date=None, tips_rev=N
     note = (f"Checked with {model} on {date}, against the contribution tips in "
             f"`{TIPS_PATH}/` at `{tips_rev}`.")
     if not local:
-        note += (" Comment `ai-contribution-check` on its own line to request a new check "
+        note += (" Comment `handbook-alignment` on its own line to request a new check "
                  "after further changes.")
     foot = ["", "---", f"<sub>{note}</sub>"]
     meta_line = ""

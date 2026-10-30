@@ -1,6 +1,10 @@
-# Basic Contribution tips
+# Contribution handbook - the basics
 
-A collection of tips from the Physlib community.
+In this file we summarize the basics of contributing to Physlib.
+The rest of the directory goes into more specifics on different areas.
+
+This handbook can either be read as a human, or you can see how much
+your PR aligns with it using the AI skill `/handbook-alignment`.
 
 ## Contents
 

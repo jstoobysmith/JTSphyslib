@@ -1,6 +1,6 @@
 # Notice
 
-`protocol.md`, and the tip files in `docs/ContributionTips/` other than `Basic.md`, are adapted
+`protocol.md`, and the tip files in `docs/ContributionHandbook/` other than `Basic.md`, are adapted
 from the review rubrics of Tau Ceti:
 
 - Source: <https://github.com/TauCetiProject/TauCetiReview/tree/8e92fb1278dd1056a6dfa3c7a9478b26e0d14140/rubrics>
