@@ -5,7 +5,7 @@ Authors: Tom Ole Diem
 -/
 module
 
-public import Physlib.CondensedMatter.Crystal.Symmetries
+public import Physlib.CondensedMatter.Crystal.Symmetry.Basic
 public import Mathlib.GroupTheory.SemidirectProduct
 
 /-!
@@ -47,9 +47,8 @@ the foundation for studying crystallographic symmetries once geometry is introdu
 ## iii. Table of contents
 
 - A. The components of a symmetry
-  - A.1. Offsets
-  - A.2. Symmetries from components
-  - A.3. Products
+  - A.1. Symmetries from components
+  - A.2. Products
 - B. Point operations
   - B.1. Point operations from components
   - B.2. The point operation of a symmetry
@@ -78,24 +77,7 @@ variable {C : Crystal G} (A B : G ≃+ G) (σ τ : Equiv.Perm C.UnitCell)
 
 /-! ## A. The components of a symmetry -/
 
-/-! ### A.1. Offsets -/
-
-/-- The offset of a symmetry at the label `i`: the cell in which the image of the reference site
-`⟨0, i⟩` lies, as a lattice vector in `G`. -/
-def offset (φ : Symmetry C) (i : C.UnitCell) : G := (φ ⟨0, i⟩).cell
-
-/-- A symmetry sends the site `⟨n, i⟩` to the cell `A n + bᵢ` with label `σ i`, where `A` is its
-lattice automorphism, `σ` its label permutation and `bᵢ` its offset at `i`. -/
-lemma apply_eq_data (φ : Symmetry C) (x : C.Site) :
-    φ x = ⟨φ.lattice x.cell + φ.offset x.label, labelHom C φ x.label⟩ :=
-  apply_eq φ x.cell x.label
-
-/-- The cell of the image of `⟨n, i⟩` is `A n + bᵢ`. -/
-lemma cell_apply (φ : Symmetry C) (x : C.Site) :
-    (φ x).cell = φ.lattice x.cell + φ.offset x.label :=
-  congrArg Site.cell (apply_eq_data φ x)
-
-/-! ### A.2. Symmetries from components -/
+/-! ### A.1. Symmetries from components -/
 
 /-- The bijection of the sites `⟨n, i⟩ ↦ ⟨A n + bᵢ, σ i⟩` given by a lattice automorphism `A`, a
 label permutation `σ` and offsets `b`. -/
@@ -141,9 +123,9 @@ automorphism, label permutation and offsets. -/
 lemma eq_ofComponents (φ : Symmetry C) :
     φ = ofComponents C φ.lattice (labelHom C φ) φ.offset := by
   ext x : 1
-  exact apply_eq_data φ x
+  exact apply_eq_components φ x
 
-/-! ### A.3. Products -/
+/-! ### A.2. Products -/
 
 /-- The product of two symmetries in components: `(A, σ, b) * (A', σ', b') = (A + A', σ * σ', A ∘ b'
 + b ∘ σ')`, where `A + A'` is the composite `A ∘ A'` of lattice automorphisms. -/

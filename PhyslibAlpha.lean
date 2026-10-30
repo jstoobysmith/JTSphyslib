@@ -667,10 +667,13 @@ public import PhyslibAlpha.QuantumMechanics.AngularMomentum.MultipoleSumRule
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.NormalizedBasis
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.ProjectionTheorem
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.SelectionRules
+public import PhyslibAlpha.QuantumMechanics.AngularMomentum.SixJ
+public import PhyslibAlpha.QuantumMechanics.AngularMomentum.SixJSymmetry
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.SpinOrbit
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.Wigner3j
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.WignerEckart
 public import PhyslibAlpha.QuantumMechanics.AngularMomentum.WignerEckartIrreducible
+public import PhyslibAlpha.QuantumMechanics.AngularMomentum.WignerEckartNormalized
 public import PhyslibAlpha.QuantumMechanics.Blackbody.RayleighJeans
 public import PhyslibAlpha.QuantumMechanics.Foundations.OntologicalModel
 public import PhyslibAlpha.QuantumMechanics.Foundations.PBR.Phases
@@ -715,7 +718,7 @@ public import PhyslibAlpha.Relativity.PauliMatrices.SelfAdjoint
 public import PhyslibAlpha.Relativity.PauliMatrices.ToTensor
 public import PhyslibAlpha.Relativity.SL2C.AxisRotations
 public import PhyslibAlpha.Relativity.SL2C.Basic
-public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Basic
 public import PhyslibAlpha.Relativity.Tensors.Equivariant
 public import PhyslibAlpha.Relativity.Tensors.RealTensor.CoVector.Representation
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.HalfPlane

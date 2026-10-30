@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Fermions.Weyl.Two
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
 /-!
 
 ## Pauli matrices as a tensor
@@ -34,15 +34,15 @@ open TensorProduct
 
 /-- The tensor `σ^μ^a^{dot a}` based on the Pauli-matrices as an element of
   `complexContr ⊗ leftHanded ⊗ rightHanded`. -/
-def asTensor : (ContrℂModule ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :=
-  ∑ i, complexContrBasis i ⊗ₜ leftRightToMatrix.symm (pauliBasis i)
+def asTensor : (ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :=
+  ∑ i, ComplexVector.basis i ⊗ₜ leftRightToMatrix.symm (pauliBasis i)
 
-/-- The expansion of `asTensor` into complexContrBasis basis vectors . -/
-lemma asTensor_expand_complexContrBasis : asTensor =
-    complexContrBasis (Sum.inl 0) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inl 0))
-    + complexContrBasis (Sum.inr 0) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 0))
-    + complexContrBasis (Sum.inr 1) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 1))
-    + complexContrBasis (Sum.inr 2) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 2)) := by
+/-- The expansion of `asTensor` into ComplexVector.basis basis vectors . -/
+lemma asTensor_expand_complexVector_basis : asTensor =
+    ComplexVector.basis (Sum.inl 0) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inl 0))
+    + ComplexVector.basis (Sum.inr 0) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 0))
+    + ComplexVector.basis (Sum.inr 1) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 1))
+    + ComplexVector.basis (Sum.inr 2) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 2)) := by
   rfl
 
 /-- The expansion of the pauli matrix `σ₀` in terms of a basis of tensor product vectors. -/
@@ -73,17 +73,17 @@ lemma leftRightToMatrix_σSA_inr_2_expand : leftRightToMatrix.symm (pauliBasis (
   simp [leftRightToMatrix_symm_expand_tmul, pauliBasis, pauliSelfAdjoint, pauliMatrix]
   module
 
-/-- The expansion of `asTensor` into complexContrBasis basis of tensor product vectors. -/
+/-- The expansion of `asTensor` into ComplexVector.basis basis of tensor product vectors. -/
 lemma asTensor_expand : asTensor =
-    complexContrBasis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
-    + complexContrBasis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1)
-    + complexContrBasis (Sum.inr 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1)
-    + complexContrBasis (Sum.inr 0) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0)
-    - I • complexContrBasis (Sum.inr 1) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1)
-    + I • complexContrBasis (Sum.inr 1) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0)
-    + complexContrBasis (Sum.inr 2) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
-    - complexContrBasis (Sum.inr 2) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1) := by
-  rw [asTensor_expand_complexContrBasis]
+    ComplexVector.basis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
+    + ComplexVector.basis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1)
+    + ComplexVector.basis (Sum.inr 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1)
+    + ComplexVector.basis (Sum.inr 0) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0)
+    - I • ComplexVector.basis (Sum.inr 1) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1)
+    + I • ComplexVector.basis (Sum.inr 1) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0)
+    + ComplexVector.basis (Sum.inr 2) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
+    - ComplexVector.basis (Sum.inr 2) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1) := by
+  rw [asTensor_expand_complexVector_basis]
   rw [leftRightToMatrix_σSA_inl_0_expand, leftRightToMatrix_σSA_inr_0_expand,
     leftRightToMatrix_σSA_inr_1_expand, leftRightToMatrix_σSA_inr_2_expand]
   simp only [Fin.isValue, tmul_add, tmul_neg, tmul_smul, tmul_sub]
@@ -95,7 +95,7 @@ set_option backward.isDefEq.respectTransparency false in
   the invariance under the `SL(2,ℂ)` action. -/
 def asConsTensor :
     (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
-    (ContrℂModule.SL2CRep.tprod (LeftHandedWeyl.rep.tprod RightHandedWeyl.rep)) where
+    (ComplexVector.SL2CRep.tprod (LeftHandedWeyl.rep.tprod RightHandedWeyl.rep)) where
 
     toFun := fun a =>
       let a' : ℂ := a
@@ -108,18 +108,18 @@ def asConsTensor :
     isIntertwining' M := by
       refine LinearMap.ext fun x : ℂ => ?_
       change x • asTensor =
-        (TensorProduct.map (ContrℂModule.SL2CRep M)
+        (TensorProduct.map (ComplexVector.SL2CRep M)
           (TensorProduct.map (LeftHandedWeyl.rep M) (RightHandedWeyl.rep M))) (x • asTensor)
       simp only [map_smul]
       apply congrArg
       nth_rewrite 2 [asTensor]
       simp only [map_sum, map_tmul]
       symm
-      calc _ = ∑ x, ((ContrℂModule.SL2CRep M) (complexContrBasis x) ⊗ₜ[ℂ]
+      calc _ = ∑ x, ((ComplexVector.SL2CRep M) (ComplexVector.basis x) ⊗ₜ[ℂ]
         leftRightToMatrix.symm (SL2C.toSelfAdjointMap M (pauliBasis x))) := by
             refine Finset.sum_congr rfl (fun x _ => ?_)
             rw [← leftRightToMatrix_ρ_symm_selfAdjoint]
-        _ = ∑ x, ((∑ i, (SL2C.toLorentzGroup M).1 i x • (complexContrBasis i)) ⊗ₜ[ℂ]
+        _ = ∑ x, ((∑ i, (SL2C.toLorentzGroup M).1 i x • (ComplexVector.basis i)) ⊗ₜ[ℂ]
             ∑ j, leftRightToMatrix.symm ((SL2C.toLorentzGroup M⁻¹).1 x j • (pauliBasis j))) := by
             refine Finset.sum_congr rfl (fun x _ => ?_)
             rw [SL2CRep_ρ_basis, SL2C.toSelfAdjointMap_pauliBasis]
@@ -127,7 +127,7 @@ def asConsTensor :
               Fin.default_eq_zero, Fin.isValue, Finset.sum_singleton, map_inv,
               LorentzGroup.inv_eq_dual, AddSubgroup.coe_add, selfAdjoint.val_smul,
               AddSubgroup.val_finsetSum, map_add, map_sum]
-        _ = ∑ x, ∑ i, ∑ j, ((SL2C.toLorentzGroup M).1 i x • (complexContrBasis i)) ⊗ₜ[ℂ]
+        _ = ∑ x, ∑ i, ∑ j, ((SL2C.toLorentzGroup M).1 i x • (ComplexVector.basis i)) ⊗ₜ[ℂ]
               leftRightToMatrix.symm.toLinearMap
                 ((SL2C.toLorentzGroup M⁻¹).1 x j • (pauliBasis j)) := by
             refine Finset.sum_congr rfl (fun x _ => ?_)
@@ -136,31 +136,31 @@ def asConsTensor :
             rw [tmul_sum]
             rfl
         _ = ∑ x, ∑ i, ∑ j, ((SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j)
-            • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
+            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
             refine Finset.sum_congr rfl (fun x _ => (Finset.sum_congr rfl (fun i _ =>
               (Finset.sum_congr rfl (fun j _ => ?_)))))
             simp only [SL2C.toLorentzGroup_apply_coe, map_inv, LorentzGroup.inv_eq_dual,
               LinearMap.map_smul_of_tower, LinearEquiv.coe_coe]
             rw [smul_tmul, smul_smul, ← tmul_smul]
         _ = ∑ i, ∑ j, ∑ x, ((SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j)
-            • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
+            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
             rw [Finset.sum_comm]
             exact Finset.sum_congr rfl (fun x _ => Finset.sum_comm)
         _ = ∑ i, ∑ j, ∑ x, (((SL2C.toLorentzGroup M).1 i x *
             (SL2C.toLorentzGroup M⁻¹).1 x j : ℝ) : ℂ)
-            • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := rfl
+            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := rfl
         _ = ∑ i, ∑ j, (∑ x, (SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j : ℂ)
-            • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
+            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
             refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
             rw [← Finset.sum_smul]
             simp
         _ = ∑ i, ∑ j, (∑ x, (SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j : ℝ)
-            • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
+            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
             refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
             congr
             simp
         _ = ∑ i, ∑ j, ((1 : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ) i j : ℝ)
-          • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
+          • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
             refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
             congr
             change ((SL2C.toLorentzGroup M) * (SL2C.toLorentzGroup M⁻¹)).1 i j = _

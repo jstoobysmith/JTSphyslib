@@ -310,9 +310,9 @@ Physlib/Relativity/Tensors/ComplexTensor/OfGaussianInt.lean
 Physlib/Relativity/Tensors/ComplexTensor/Units/Basic.lean
 Physlib/Relativity/Tensors/ComplexTensor/Units/Pre.lean
 Physlib/Relativity/Tensors/ComplexTensor/Units/Symm.lean
-Physlib/Relativity/Tensors/ComplexTensor/Vector/Pre/Basic.lean
-Physlib/Relativity/Tensors/ComplexTensor/Vector/Pre/Contraction.lean
-Physlib/Relativity/Tensors/ComplexTensor/Vector/Pre/Modules.lean
+Physlib/Relativity/Tensors/ComplexTensor/Vector/Basic.lean
+Physlib/Relativity/Tensors/ComplexTensor/Vector/Contraction.lean
+Physlib/Relativity/Tensors/ComplexTensor/Vector/Modules.lean
 Physlib/Relativity/Tensors/Conjugation/Basic.lean
 Physlib/Relativity/Tensors/Constructors.lean
 Physlib/Relativity/Tensors/Contraction/Basic.lean

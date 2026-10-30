@@ -16,7 +16,14 @@ public import Physlib.ClassicalMechanics.HarmonicOscillator.Basic
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Basic
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.KineticEnergy
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Trajectory
-public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.AmplitudePhase
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.Basic
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.Consistency
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.Energy
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.InitialData
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.Periodicity
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.SpecialPoints
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution.Uniqueness
 public import Physlib.ClassicalMechanics.HarmonicOscillator.WithDim
 public import Physlib.ClassicalMechanics.Lagrangian.Basic
 public import Physlib.ClassicalMechanics.Lagrangian.CriticalPoint
@@ -57,9 +64,11 @@ public import Physlib.CondensedMatter.Crystal.Bonds
 public import Physlib.CondensedMatter.Crystal.Bravais.Basic
 public import Physlib.CondensedMatter.Crystal.Embedding
 public import Physlib.CondensedMatter.Crystal.PeriodicGraph
-public import Physlib.CondensedMatter.Crystal.Symmetries
+public import Physlib.CondensedMatter.Crystal.Symmetry.Basic
 public import Physlib.CondensedMatter.Crystal.Symmetry.Isometries
 public import Physlib.CondensedMatter.Crystal.Symmetry.PointOperations
+public import Physlib.CondensedMatter.Crystal.Symmetry.SpaceGroup
+public import Physlib.CondensedMatter.Crystal.Symmetry.Species
 public import Physlib.CondensedMatter.LatticeModels.Basic
 public import Physlib.CondensedMatter.ManyBody.Basic
 public import Physlib.CondensedMatter.Response.Basic
@@ -481,6 +490,7 @@ public import Physlib.Relativity.PauliMatrices.ToTensor
 public import Physlib.Relativity.SL2C.AxisRotations
 public import Physlib.Relativity.SL2C.Basic
 public import Physlib.Relativity.SL2C.CayleyKlein
+public import Physlib.Relativity.SL2C.Cover
 public import Physlib.Relativity.SL2C.SelfAdjoint
 public import Physlib.Relativity.Special.ProperTime
 public import Physlib.Relativity.Special.TwinParadox.Basic
@@ -496,9 +506,9 @@ public import Physlib.Relativity.Tensors.ComplexTensor.OfGaussianInt
 public import Physlib.Relativity.Tensors.ComplexTensor.Units.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Units.Pre
 public import Physlib.Relativity.Tensors.ComplexTensor.Units.Symm
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Contraction
-public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Modules
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Contraction
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Modules
 public import Physlib.Relativity.Tensors.ComponentIdx.Basic
 public import Physlib.Relativity.Tensors.ComponentIdx.Contraction
 public import Physlib.Relativity.Tensors.ComponentIdx.Insert
@@ -605,6 +615,7 @@ public import Physlib.SpaceAndTime.TimeAndSpace.Basic
 public import Physlib.SpaceAndTime.TimeAndSpace.ConstantTimeDist
 public import Physlib.SpaceAndTime.TimeAndSpace.EuclideanGroup.Action
 public import Physlib.SpaceAndTime.TimeAndSpace.EuclideanGroup.SchwartzAction
+public import Physlib.SpaceAndTime.WaveVectorSpace.Basic
 public import Physlib.StatisticalMechanics.BoltzmannConstant
 public import Physlib.StatisticalMechanics.CanonicalEnsemble.Basic
 public import Physlib.StatisticalMechanics.CanonicalEnsemble.Finite
