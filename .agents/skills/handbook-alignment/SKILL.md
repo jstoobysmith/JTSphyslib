@@ -17,6 +17,7 @@ Firstly we have to decide two things. Firstly, what changes we need to check, an
 
 The request should either have a PR number e.g. `#1049` (we will use `#<N>` to describe a PR) or say `local`. If it does not, then you should ask the user for one.
 
+It may also (optionally) have a list of handbook files e.g. `Basic, Naming, References`. If it does we will only run our test on these files. If no such list is provided, we will run it on all the files appearing in `./docs/ContributionHandbook/`.
 
 Now we have to create a local copy of the repo for the changes.
 Importantly, you should never `build` the project.
