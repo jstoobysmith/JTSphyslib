@@ -286,21 +286,6 @@ lemma basis_map_prod {n2 : ℕ} {c2 : Fin n2 → C} {M₂ : Type}
   rfl
 
 open Tensor in
-/-- The components of `toTensor x`, for `x` in a tensor product of two `Tensorial` types, are the
-  coordinates of `x` in the tensor product of the bases transported from the two factors. -/
-lemma basis_repr_toTensor_prod {n2 : ℕ} {c2 : Fin n2 → C} {M₂ : Type}
-    [Tensorial S c M] [AddCommMonoid M₂] [Module k M₂]
-    [Tensorial S c2 M₂] (x : M ⊗[k] M₂) (φ : ComponentIdx (S := S) (Fin.append c c2)) :
-    (Tensor.basis (S := S) (Fin.append c c2)).repr (toTensor x) φ =
-      (((Tensor.basis (S := S) c).map (toTensor (M := M)).symm).tensorProduct
-        ((Tensor.basis (S := S) c2).map (toTensor (M := M₂)).symm)).repr x
-        (ComponentIdx.prod φ) := by
-  have h := congrArg (fun B => B.repr x φ)
-    (basis_map_prod (S := S) (c := c) (c2 := c2) (M := M) (M₂ := M₂))
-  simpa only [Module.Basis.map_repr, LinearEquiv.trans_apply, LinearEquiv.symm_symm,
-    Module.Basis.repr_reindex_apply, Equiv.symm_symm] using h
-
-open Tensor in
 lemma prod_basis_of_map_reindex {n2 : ℕ} {c2 : Fin n2 → C} {M₂ : Type}
     [Tensorial S c M] [AddCommMonoid M₂] [Module k M₂]
     [Tensorial S c2 M₂] {ι ι2 : Type} {b : Module.Basis ι k M} {b2 : Module.Basis ι2 k M₂}

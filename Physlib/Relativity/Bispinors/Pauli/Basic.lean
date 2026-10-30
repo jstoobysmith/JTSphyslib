@@ -7,7 +7,6 @@ module
 
 public import Physlib.Relativity.Fermions.Weyl.Two
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
-public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 /-!
 
 ## Pauli matrices as Lorentz tensors
@@ -76,19 +75,9 @@ lemma pauliVal_expand_tmul : ComplexVector.pauliVal =
   module
 
 /-- The Pauli tensor is invariant under the `SL(2, ℂ)` action. -/
-lemma pauliVal_invariant (Λ : SL(2,ℂ)) : Λ • pauliVal = pauliVal := by
-  have hmap (x : ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :
-      Λ • x = TensorProduct.map (SL2CRep Λ)
-        (TensorProduct.map (LeftHandedWeyl.rep Λ) (RightHandedWeyl.rep Λ)) x := by
-    induction x using TensorProduct.inductionOn with
-    | tmul v w =>
-      induction w using TensorProduct.inductionOn with
-      | tmul l r =>
-        simp [TensorSpecies.Tensorial.smul_prod, smul_eq_SL2CRep, LeftHandedWeyl.smul_eq_rep,
-          RightHandedWeyl.smul_eq_rep]
-      | add w1 w2 h1 h2 => rw [tmul_add, smul_add, h1, h2, map_add]
-    | add x y hx hy => rw [smul_add, hx, hy, map_add]
-  rw [hmap]
+lemma pauliVal_invariant (Λ : SL(2,ℂ)) :
+    TensorProduct.map (SL2CRep Λ)
+      (TensorProduct.map (LeftHandedWeyl.rep Λ) (RightHandedWeyl.rep Λ)) pauliVal = pauliVal := by
   have h (i j) : ∑ k, (SL2C.toLorentzGroup Λ).1 i k * (SL2C.toLorentzGroup Λ⁻¹).1 k j =
       (1 : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ) i j := by
     rw [← mul_apply, ← lorentzGroupIsGroup_mul_coe, ← map_mul, mul_inv_cancel, map_one]
@@ -120,18 +109,7 @@ def pauli :(Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
     isIntertwining' M := by
       refine LinearMap.ext fun x : ℂ => ?_
       change x • pauliVal = TensorProduct.map _ (TensorProduct.map _ _) (x • pauliVal)
-      have hmap (x : ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :
-          M • x = TensorProduct.map (SL2CRep M)
-            (TensorProduct.map (LeftHandedWeyl.rep M) (RightHandedWeyl.rep M)) x := by
-        induction x using TensorProduct.inductionOn with
-        | tmul v w =>
-          induction w using TensorProduct.inductionOn with
-          | tmul l r =>
-            simp [TensorSpecies.Tensorial.smul_prod, smul_eq_SL2CRep, LeftHandedWeyl.smul_eq_rep,
-              RightHandedWeyl.smul_eq_rep]
-          | add w1 w2 h1 h2 => rw [tmul_add, smul_add, h1, h2, map_add]
-        | add x y hx hy => rw [smul_add, hx, hy, map_add]
-      rw [map_smul, ← hmap, pauliVal_invariant]
+      rw [map_smul, pauliVal_invariant]
 
 /-- The map `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ ComplexVector ⊗ LeftHandedWeyl ⊗ RightHandedWeyl`
   corresponding to Pauli matrices, when evaluated on `1` corresponds to the tensor
