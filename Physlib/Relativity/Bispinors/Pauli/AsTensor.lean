@@ -7,9 +7,10 @@ module
 
 public import Physlib.Relativity.Fermions.Weyl.Two
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 /-!
 
-## Pauli matrices as a tensor
+## Pauli matrices as Lorentz tensors
 
 The results in this file are primarily used to show that
 the pauli matrices in invariant under the `SL(2,ℂ)` action.
@@ -18,7 +19,7 @@ the pauli matrices in invariant under the `SL(2,ℂ)` action.
 
 @[expose] public section
 
-namespace PauliMatrix
+namespace Lorentz.ComplexVector
 
 open Complex
 open Lorentz
@@ -30,51 +31,63 @@ noncomputable section
 open Matrix
 open MatrixGroups
 open Complex
-open TensorProduct
+open TensorProduct PauliMatrix
 
 /-- The tensor `σ^μ^a^{dot a}` based on the Pauli-matrices as an element of
-  `complexContr ⊗ leftHanded ⊗ rightHanded`. -/
-def asTensor : (ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :=
+  `ComplexVector ⊗ LeftHandedWeyl ⊗ RightHandedWeyl`. -/
+def pauliVal : ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl) :=
   ∑ i, ComplexVector.basis i ⊗ₜ leftRightToMatrix.symm (pauliBasis i)
 
-/-- The expansion of `asTensor` into ComplexVector.basis basis vectors . -/
-lemma asTensor_expand_complexVector_basis : asTensor =
+/-- The expansion of `ComplexVector.pauliVal` into `ComplexVector.basis` basis vectors. -/
+lemma pauliVal_expand_basis : ComplexVector.pauliVal =
     ComplexVector.basis (Sum.inl 0) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inl 0))
     + ComplexVector.basis (Sum.inr 0) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 0))
     + ComplexVector.basis (Sum.inr 1) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 1))
     + ComplexVector.basis (Sum.inr 2) ⊗ₜ leftRightToMatrix.symm (pauliBasis (Sum.inr 2)) := by
   rfl
 
-/-- The expansion of the pauli matrix `σ₀` in terms of a basis of tensor product vectors. -/
-lemma leftRightToMatrix_σSA_inl_0_expand : leftRightToMatrix.symm (pauliBasis (Sum.inl 0)) =
-    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0 +
-      LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1 := by
-  rw [leftRightToMatrix_symm_expand_tmul]
-  simp [pauliBasis, pauliSelfAdjoint, pauliMatrix]
+/-- The components of `pauliVal` in the basis `e_μ ⊗ e_a ⊗ e_ḃ` are the entries of the
+  Pauli matrices. -/
+lemma pauliVal_repr (μ : Fin 1 ⊕ Fin 3) (a b : Fin 2) :
+    (ComplexVector.basis.tensorProduct
+      (LeftHandedWeyl.basis.tensorProduct RightHandedWeyl.basis)).repr pauliVal (μ, (a, b)) =
+      pauliMatrix μ a b := by
+  have hlr (M : Matrix (Fin 2) (Fin 2) ℂ) :
+      (LeftHandedWeyl.basis.tensorProduct RightHandedWeyl.basis).repr
+        (leftRightToMatrix.symm M) (a, b) = M a b := by
+    change leftRightToMatrix (leftRightToMatrix.symm M) a b = M a b
+    rw [LinearEquiv.apply_symm_apply]
+  simp [- Fintype.sum_sum_type, pauliVal, Module.Basis.tensorProduct_repr_tmul_apply,
+    Finsupp.single_apply, hlr, pauliBasis, pauliSelfAdjoint]
 
-/-- The expansion of the pauli matrix `σ₁` in terms of a basis of tensor product vectors. -/
-lemma leftRightToMatrix_σSA_inr_0_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 0)) =
-    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1 +
-      LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0:= by
-  rw [leftRightToMatrix_symm_expand_tmul]
-  simp [pauliBasis, pauliSelfAdjoint, pauliMatrix]
+open TensorSpecies Tensor in
+/-- The components of the Pauli tensor `toTensor pauliVal` are the entries of the Pauli matrices,
+  `σ^μ_{a ḃ}`. -/
+lemma toTensor_pauliVal_basis_repr (φ : ComponentIdx (S := complexLorentzTensor)
+    (Fin.append ![.up] (Fin.append ![.upL] ![.upR]))) :
+    (Tensor.basis _).repr (Tensorial.toTensor pauliVal) φ = pauliMatrix (φ 0) (φ 1) (φ 2) := by
+  have hreindex {ι ι' κ κ' N₁ N₂ : Type} [Fintype ι] [Fintype κ] [DecidableEq ι] [DecidableEq κ]
+      [AddCommGroup N₁] [Module ℂ N₁] [AddCommGroup N₂] [Module ℂ N₂]
+      (b₁ : Module.Basis ι ℂ N₁) (b₂ : Module.Basis κ ℂ N₂) (e₁ : ι ≃ ι') (e₂ : κ ≃ κ') :
+      (b₁.reindex e₁).tensorProduct (b₂.reindex e₂) =
+        (b₁.tensorProduct b₂).reindex (e₁.prodCongr e₂) :=
+    Module.Basis.eq_of_apply_eq fun i => by
+      simp [Module.Basis.tensorProduct_apply']
+  have hright {ι κ κ' N₁ N₂ : Type} [Fintype ι] [Fintype κ] [DecidableEq ι] [DecidableEq κ]
+      [AddCommGroup N₁] [Module ℂ N₁] [AddCommGroup N₂] [Module ℂ N₂]
+      (b₁ : Module.Basis ι ℂ N₁) (b₂ : Module.Basis κ ℂ N₂) (e₂ : κ ≃ κ') :
+      b₁.tensorProduct (b₂.reindex e₂) =
+        (b₁.tensorProduct b₂).reindex ((Equiv.refl ι).prodCongr e₂) :=
+    Module.Basis.eq_of_apply_eq fun i => by
+      simp [Module.Basis.tensorProduct_apply']
+  rw [Tensorial.basis_repr_toTensor_prod, ComplexVector.basis_map_toTensor_symm,
+    Tensorial.basis_map_prod, LeftHandedWeyl.basis_map_toTensor_symm,
+    RightHandedWeyl.basis_map_toTensor_symm, hreindex LeftHandedWeyl.basis RightHandedWeyl.basis,
+    hreindex, Module.Basis.repr_reindex_apply, hright, Module.Basis.repr_reindex_apply]
+  exact pauliVal_repr _ _ _
 
-/-- The expansion of the pauli matrix `σ₂` in terms of a basis of tensor product vectors. -/
-lemma leftRightToMatrix_σSA_inr_1_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 1)) =
-    -(I • LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1) +
-      I • LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0 := by
-  simp [leftRightToMatrix_symm_expand_tmul, pauliBasis, pauliSelfAdjoint, pauliMatrix]
-  module
-
-/-- The expansion of the pauli matrix `σ₃` in terms of a basis of tensor product vectors. -/
-lemma leftRightToMatrix_σSA_inr_2_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 2)) =
-    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0 -
-      LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1 := by
-  simp [leftRightToMatrix_symm_expand_tmul, pauliBasis, pauliSelfAdjoint, pauliMatrix]
-  module
-
-/-- The expansion of `asTensor` into ComplexVector.basis basis of tensor product vectors. -/
-lemma asTensor_expand : asTensor =
+/-- The expansion of `ComplexVector.pauliVal` into the basis of tensor product vectors. -/
+lemma pauliVal_expand_tmul : ComplexVector.pauliVal =
     ComplexVector.basis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
     + ComplexVector.basis (Sum.inl 0) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1)
     + ComplexVector.basis (Sum.inr 0) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1)
@@ -83,23 +96,48 @@ lemma asTensor_expand : asTensor =
     + I • ComplexVector.basis (Sum.inr 1) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0)
     + ComplexVector.basis (Sum.inr 2) ⊗ₜ (LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0)
     - ComplexVector.basis (Sum.inr 2) ⊗ₜ (LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1) := by
-  rw [asTensor_expand_complexVector_basis]
-  rw [leftRightToMatrix_σSA_inl_0_expand, leftRightToMatrix_σSA_inr_0_expand,
-    leftRightToMatrix_σSA_inr_1_expand, leftRightToMatrix_σSA_inr_2_expand]
-  simp only [Fin.isValue, tmul_add, tmul_neg, tmul_smul, tmul_sub]
-  rfl
+  rw [ComplexVector.pauliVal_expand_basis]
+  simp [leftRightToMatrix_symm_expand_tmul, pauliBasis, pauliSelfAdjoint, pauliMatrix,
+    Fin.sum_univ_two, tmul_add, tmul_smul]
+  module
 
-set_option backward.isDefEq.respectTransparency false in
+/-- The Pauli tensor is invariant under the `SL(2, ℂ)` action. -/
+lemma pauliVal_invariant (Λ : SL(2,ℂ)) : Λ • pauliVal = pauliVal := by
+  have hmap (x : ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :
+      Λ • x = TensorProduct.map (SL2CRep Λ)
+        (TensorProduct.map (LeftHandedWeyl.rep Λ) (RightHandedWeyl.rep Λ)) x := by
+    induction x using TensorProduct.inductionOn with
+    | tmul v w =>
+      induction w using TensorProduct.inductionOn with
+      | tmul l r =>
+        simp [TensorSpecies.Tensorial.smul_prod, smul_eq_SL2CRep, LeftHandedWeyl.smul_eq_rep,
+          RightHandedWeyl.smul_eq_rep]
+      | add w1 w2 h1 h2 => rw [tmul_add, smul_add, h1, h2, map_add]
+    | add x y hx hy => rw [smul_add, hx, hy, map_add]
+  rw [hmap]
+  have h (i j) : ∑ k, (SL2C.toLorentzGroup Λ).1 i k * (SL2C.toLorentzGroup Λ⁻¹).1 k j =
+      (1 : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ) i j := by
+    rw [← mul_apply, ← lorentzGroupIsGroup_mul_coe, ← map_mul, mul_inv_cancel, map_one]
+    rfl
+  simp only [pauliVal, map_sum, map_tmul, SL2CRep_ρ_basis,
+    leftRightToMatrix_ρ_symm_selfAdjoint _ (pauliBasis _).2, Subtype.coe_eta,
+    SL2C.toSelfAdjointMap_pauliBasis, AddSubgroup.val_finsetSum, selfAdjoint.val_smul,
+    ← Complex.coe_smul, map_smul, sum_tmul, tmul_sum, smul_tmul_smul]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [Finset.sum_comm]
+  simp only [← Finset.sum_smul, ← ofReal_mul, ← ofReal_sum, h, one_apply,
+    apply_ite Complex.ofReal, ofReal_one, ofReal_zero, ite_smul, one_smul, zero_smul,
+    Finset.sum_ite_eq', Finset.mem_univ, ite_true]
+
 /-- The tensor `σ^μ^a^{dot a}` based on the Pauli-matrices as a morphism,
-  `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ complexContr ⊗ leftHanded ⊗ rightHanded` manifesting
+  `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ ComplexVector ⊗ LeftHandedWeyl ⊗ RightHandedWeyl` manifesting
   the invariance under the `SL(2,ℂ)` action. -/
-def asConsTensor :
-    (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
+def pauli :(Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
     (ComplexVector.SL2CRep.tprod (LeftHandedWeyl.rep.tprod RightHandedWeyl.rep)) where
-
     toFun := fun a =>
       let a' : ℂ := a
-      a' • asTensor
+      a' • ComplexVector.pauliVal
     map_add' := fun x y => by
       simp only [add_smul]
     map_smul' := fun m x => by
@@ -107,78 +145,27 @@ def asConsTensor :
       rfl
     isIntertwining' M := by
       refine LinearMap.ext fun x : ℂ => ?_
-      change x • asTensor =
-        (TensorProduct.map (ComplexVector.SL2CRep M)
-          (TensorProduct.map (LeftHandedWeyl.rep M) (RightHandedWeyl.rep M))) (x • asTensor)
-      simp only [map_smul]
-      apply congrArg
-      nth_rewrite 2 [asTensor]
-      simp only [map_sum, map_tmul]
-      symm
-      calc _ = ∑ x, ((ComplexVector.SL2CRep M) (ComplexVector.basis x) ⊗ₜ[ℂ]
-        leftRightToMatrix.symm (SL2C.toSelfAdjointMap M (pauliBasis x))) := by
-            refine Finset.sum_congr rfl (fun x _ => ?_)
-            rw [← leftRightToMatrix_ρ_symm_selfAdjoint]
-        _ = ∑ x, ((∑ i, (SL2C.toLorentzGroup M).1 i x • (ComplexVector.basis i)) ⊗ₜ[ℂ]
-            ∑ j, leftRightToMatrix.symm ((SL2C.toLorentzGroup M⁻¹).1 x j • (pauliBasis j))) := by
-            refine Finset.sum_congr rfl (fun x _ => ?_)
-            rw [SL2CRep_ρ_basis, SL2C.toSelfAdjointMap_pauliBasis]
-            simp only [SL2C.toLorentzGroup_apply_coe, Fintype.sum_sum_type, Finset.univ_unique,
-              Fin.default_eq_zero, Fin.isValue, Finset.sum_singleton, map_inv,
-              LorentzGroup.inv_eq_dual, AddSubgroup.coe_add, selfAdjoint.val_smul,
-              AddSubgroup.val_finsetSum, map_add, map_sum]
-        _ = ∑ x, ∑ i, ∑ j, ((SL2C.toLorentzGroup M).1 i x • (ComplexVector.basis i)) ⊗ₜ[ℂ]
-              leftRightToMatrix.symm.toLinearMap
-                ((SL2C.toLorentzGroup M⁻¹).1 x j • (pauliBasis j)) := by
-            refine Finset.sum_congr rfl (fun x _ => ?_)
-            rw [sum_tmul]
-            refine Finset.sum_congr rfl (fun i _ => ?_)
-            rw [tmul_sum]
-            rfl
-        _ = ∑ x, ∑ i, ∑ j, ((SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j)
-            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
-            refine Finset.sum_congr rfl (fun x _ => (Finset.sum_congr rfl (fun i _ =>
-              (Finset.sum_congr rfl (fun j _ => ?_)))))
-            simp only [SL2C.toLorentzGroup_apply_coe, map_inv, LorentzGroup.inv_eq_dual,
-              LinearMap.map_smul_of_tower, LinearEquiv.coe_coe]
-            rw [smul_tmul, smul_smul, ← tmul_smul]
-        _ = ∑ i, ∑ j, ∑ x, ((SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j)
-            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
-            rw [Finset.sum_comm]
-            exact Finset.sum_congr rfl (fun x _ => Finset.sum_comm)
-        _ = ∑ i, ∑ j, ∑ x, (((SL2C.toLorentzGroup M).1 i x *
-            (SL2C.toLorentzGroup M⁻¹).1 x j : ℝ) : ℂ)
-            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := rfl
-        _ = ∑ i, ∑ j, (∑ x, (SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j : ℂ)
-            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
-            refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
-            rw [← Finset.sum_smul]
-            simp
-        _ = ∑ i, ∑ j, (∑ x, (SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j : ℝ)
-            • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
-            refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
-            congr
-            simp
-        _ = ∑ i, ∑ j, ((1 : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ) i j : ℝ)
-          • ((ComplexVector.basis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
-            refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
-            congr
-            change ((SL2C.toLorentzGroup M) * (SL2C.toLorentzGroup M⁻¹)).1 i j = _
-            rw [← SL2C.toLorentzGroup.map_mul]
-            simp only [mul_inv_cancel, _root_.map_one, lorentzGroupIsGroup_one_coe]
-        _ = asTensor := by
-          refine Finset.sum_congr rfl (fun i _ => ?_)
-          rw [Finset.sum_eq_single i (fun b _ hb => ?_) (fun hb => ?_)]
-          · simp only [one_apply_eq, one_smul]
-          · simp [one_apply_ne' hb]
-            module
-          · simp only [Finset.mem_univ, not_true_eq_false] at hb
+      change x • pauliVal = TensorProduct.map _ (TensorProduct.map _ _) (x • pauliVal)
+      have hmap (x : ComplexVector ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) :
+          M • x = TensorProduct.map (SL2CRep M)
+            (TensorProduct.map (LeftHandedWeyl.rep M) (RightHandedWeyl.rep M)) x := by
+        induction x using TensorProduct.inductionOn with
+        | tmul v w =>
+          induction w using TensorProduct.inductionOn with
+          | tmul l r =>
+            simp [TensorSpecies.Tensorial.smul_prod, smul_eq_SL2CRep, LeftHandedWeyl.smul_eq_rep,
+              RightHandedWeyl.smul_eq_rep]
+          | add w1 w2 h1 h2 => rw [tmul_add, smul_add, h1, h2, map_add]
+        | add x y hx hy => rw [smul_add, hx, hy, map_add]
+      rw [map_smul, ← hmap, pauliVal_invariant]
 
-/-- The map `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ complexContr ⊗ leftHanded ⊗ rightHanded` corresponding
-  to Pauli matrices, when evaluated on `1` corresponds to the tensor `PauliMatrix.asTensor`. -/
-lemma asConsTensor_apply_one : asConsTensor (1 : ℂ) = asTensor := by
-  change (1 : ℂ) • asTensor = asTensor
+/-- The map `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ ComplexVector ⊗ LeftHandedWeyl ⊗ RightHandedWeyl`
+  corresponding to Pauli matrices, when evaluated on `1` corresponds to the tensor
+  `ComplexVector.pauliVal`. -/
+lemma pauli_apply_one :
+    ComplexVector.pauli (1 : ℂ) = ComplexVector.pauliVal := by
+  change (1 : ℂ) • ComplexVector.pauliVal = ComplexVector.pauliVal
   simp only [one_smul]
 
 end
-end PauliMatrix
+end Lorentz.ComplexVector
